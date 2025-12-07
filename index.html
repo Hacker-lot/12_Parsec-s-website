@@ -51,23 +51,22 @@
         }
         .flicker-text-green {
             animation: flicker 4s infinite alternate;
-            color: #6bff16;
+            color: #6bff16; /* Custom bright green */
         }
         
-        /* Blinking dot animation - Now uses the light red color to match flicker-text */
+        /* Blinking dot animation - Uses the status green color */
         @keyframes blinker {
             50% { opacity: 0; }
         }
         .blinking-dot {
             height: 10px;
             width: 10px;
-            background-color: #6bff16;
+            background-color: #6bff16; /* Matches flicker-text-green */
             border-radius: 50%;
             display: inline-block;
             margin-right: 8px; /* Added spacing */
             animation: blinker 1s linear infinite;
         }
-
 
         /* Scrolling Front-End Artwork: Schematic Background */
         .scrolling-artwork {
@@ -102,61 +101,63 @@
             overflow: hidden;
             min-height: 500px;
         }
-        .waste-punk-panel::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            /* Simulating screen noise/grime texture */
-            background: repeating-linear-gradient(
-                0deg,
-                rgba(255, 248, 231, 0.08),
-                rgba(255, 248, 231, 0.08) 1px,
-                transparent 1px,
-                transparent 5px
-            );
-            pointer-events: none;
-            opacity: 0.9;
-            z-index: 10;
-        }
-        
-        /* Navigation Button Styling */
-        .nav-button {
-            padding: 0.5rem 1.5rem;
-            border: 2px solid #a0522d;
-            color: #fca5a5;
-            background-color: #374151;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.1s;
-        }
-        .nav-button:hover {
-            background-color: #4b5563;
-            color: #fff;
-            box-shadow: 0 0 10px #34d399;
-        }
-        .active-nav {
-            background-color: #34d399 !important;
-            color: #1f2937 !important;
-            font-weight: bold;
-            border-color: #1f2937 !important;
-            box-shadow: 0 0 15px #34d399;
-        }
-
-        /* Styling for the content of the profile cards inside the main panel */
         .profile-content {
             z-index: 20;
             position: relative;
         }
+        
+        /* Navigation Button Styling remains the same */
 
-        /* Responsive padding for larger screens */
-        @media (min-width: 640px) {
-            .container-wrapper {
-                padding: 2rem;
-            }
+        /* --- AVATAR MODULE STYLES --- */
+        .avatar-container {
+            position: fixed;
+            top: 50%;
+            right: 0;
+            transform: translateY(-50%);
+            z-index: 100;
+            /* Set initial position for transition */
+            padding-right: 0; 
+            transition: padding-right 0.4s ease-out;
         }
+
+        /* On hover, push the padding-right to reveal the message */
+        .avatar-container:hover {
+            padding-right: 220px; /* Width of the message box + small gap */
+        }
+
+        .avatar-message-box {
+            position: absolute;
+            top: 0;
+            right: 80px; /* Position next to the 100px avatar, just hidden */
+            height: 100%;
+            width: 200px; /* Message box width */
+            padding: 10px;
+            background-color: #4b5563; /* Scrap Metal */
+            border: 2px solid #34d399; /* Signal Green Border */
+            color: #fff8e7;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            border-radius: 8px 0 0 8px; /* Rounded on the left edge */
+            opacity: 0;
+            transform: translateX(100%); /* Start hidden to the right */
+            transition: opacity 0.3s ease-in, transform 0.4s ease-out;
+        }
+
+        .avatar-container:hover .avatar-message-box {
+            opacity: 1;
+            transform: translateX(0); /* Slide into view */
+        }
+
+        .avatar-image {
+            width: 80px; /* Smaller avatar for better fit */
+            height: 80px;
+            border-radius: 50%;
+            border: 3px solid #fca5a5; /* Red alert ring */
+            box-shadow: 0 0 15px #fca5a5;
+        }
+
     </style>
 </head>
 <body class="font-mono">
@@ -254,6 +255,19 @@
                 <span class="text-gray-500">Log Timestamp: 2049.03.14 @ 17:34 UTC</span>
             </p>
         </footer>
+    </div>
+
+    <!-- AVATAR MODULE (Fixed Position) -->
+    <div class="avatar-container group">
+        <!-- Message Box (Hidden until hover) -->
+        <a href="https://12parsec.dpdns.org/polynomial" target="_blank" class="avatar-message-box">
+            <span class="text-lg font-bold text-signal-green">ENTER: SECTOR 7</span>
+            <span class="text-xs text-yellow-300 mt-1">[PLAY] Polynomial Protocol</span>
+        </a>
+        
+        <!-- Avatar Image (Visible) -->
+        <!-- Using a placeholder image for avatar.png -->
+        <img src="avataaars.png" alt="Unit Avatar" class="avatar-image">
     </div>
 
     <script>
