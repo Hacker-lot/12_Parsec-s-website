@@ -45,10 +45,29 @@
             10%  { text-shadow: 0 0 5px rgba(255, 255, 255, 0.5); opacity: 1; }
             100% { text-shadow: 0 0 5px rgba(255, 255, 255, 0.5); opacity: 1; }
         }
-        .flicker-text {
+        .flicker-text-red {
             animation: flicker 4s infinite alternate;
             color: #fca5a5; /* Light Red */
         }
+        .flicker-text-green {
+            animation: flicker 4s infinite alternate;
+            color: #6bff16; /* Light Red */
+        }
+        
+        /* Blinking dot animation - Now uses the light red color to match flicker-text */
+        @keyframes blinker {
+            50% { opacity: 0; }
+        }
+        .blinking-dot {
+            height: 10px;
+            width: 10px;
+            background-color: #6bff16;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px; /* Added spacing */
+            animation: blinker 1s linear infinite;
+        }
+
 
         /* Scrolling Front-End Artwork: Schematic Background */
         .scrolling-artwork {
@@ -150,13 +169,13 @@
         <!-- Main Panel: System Header -->
         <header class="waste-punk-panel p-6 sm:p-10 rounded-lg mb-8">
             <div class="profile-content">
-                <h1 class="text-3xl sm:text-5xl font-bold text-yellow-50 mb-2 border-b-4 border-signal-green pb-2 uppercase tracking-widest">
+                <h1 class="text-4xl sm:text-6xl font-bold text-yellow-50 mb-2 border-b-4 border-signal-green pb-2 uppercase tracking-widest">
                     // SALVAGED PROFILE //
                 </h1>
-                <p class="text-xl sm:text-2xl text-yellow-300 mb-4">
-                    > IDENTITY: <span class="flicker-text">12_PARSEC</span> <span class="text-red-400">|</span> Asset Status: ACTIVE
+                <p class="text-2xl sm:text-3xl text-yellow-300 mb-4">
+                    > IDENTITY: <span class="flicker-text-red">12_PARSEC</span> <span class="text-red-400">|</span> Asset Status: <span class="flicker-text-green inline-flex items-center"></span>ACTIVE</span><span class="blinking-dot"></span>
                 </p>
-                <p class="text-yellow-100 leading-relaxed text-sm sm:text-base">
+                <p class="text-base sm:text-lg text-yellow-100 leading-relaxed">
                     System Log: Core directives re-initialized. Unit 12_Parsec specializes in high-impact, low-resource deployment across digital and physical sectors. Operational modes are tested for maximum disruption. Minimal compliance achieved.
                 </p>
             </div>
@@ -178,10 +197,10 @@
                     <h2 class="text-3xl font-semibold mb-6 text-signal-green flex items-center">
                         <span class="text-4xl mr-3 leading-none text-yellow-50">&#9889;</span> VIBE CODER [ALPHA]
                     </h2>
-                    <p class="text-xl mb-4 text-yellow-50 border-b border-gray-500 pb-2">
+                    <p class="text-2xl mb-4 text-yellow-50 border-b border-gray-500 pb-2">
                         [Directive]: Aesthetic Integrity Protocol
                     </p>
-                    <ul class="list-disc list-inside text-sm leading-relaxed text-yellow-100 space-y-2 pl-4">
+                    <ul class="list-disc list-inside text-base leading-relaxed text-yellow-100 space-y-2 pl-4">
                         <li>Engineers digital experiences where mood and aesthetic are the primary output.</li>
                         <li>Writes high-impact, low-compliance code.</li>
                         <li>Optimizes strictly for *feel* over framework stability.</li>
@@ -196,10 +215,10 @@
                     <h2 class="text-3xl font-semibold mb-6 text-signal-green flex items-center">
                         <span class="text-4xl mr-3 leading-none text-yellow-50">&#9760;</span> INDIE GAME DEV [BETA]
                     </h2>
-                    <p class="text-xl mb-4 text-yellow-50 border-b border-gray-500 pb-2">
+                    <p class="text-2xl mb-4 text-yellow-50 border-b border-gray-500 pb-2">
                         [Directive]: Resource Scavenging & World Forging
                     </p>
-                    <ul class="list-disc list-inside text-sm leading-relaxed text-yellow-100 space-y-2 pl-4">
+                    <ul class="list-disc list-inside text-base leading-relaxed text-yellow-100 space-y-2 pl-4">
                         <li>Forges compelling worlds from discarded and unconventional assets.</li>
                         <li>Specializes in grit-focused narratives built on ruin philosophy.</li>
                         <li>Minimal assets, maximal emotional impact.</li>
@@ -214,10 +233,10 @@
                     <h2 class="text-3xl font-semibold mb-6 text-signal-green flex items-center">
                         <span class="text-4xl mr-3 leading-none text-yellow-50">&#9881;</span> ELECTRONICS MASTER [GAMMA]
                     </h2>
-                    <p class="text-xl mb-4 text-yellow-50 border-b border-gray-500 pb-2">
+                    <p class="text-2xl mb-4 text-yellow-50 border-b border-gray-500 pb-2">
                         [Directive]: Analog Signal Reconstitution
                     </p>
-                    <ul class="list-disc list-inside text-sm leading-relaxed text-yellow-100 space-y-2 pl-4">
+                    <ul class="list-disc list-inside text-base leading-relaxed text-yellow-100 space-y-2 pl-4">
                         <li>Breathes life into e-waste and dead circuits (Arduino/microcontrollers).</li>
                         <li>Focuses on physical computing, hardware hacking, and tactile interfaces.</li>
                         <li>Bridges digital command signals to analog, real-world output.</li>
@@ -228,7 +247,7 @@
         </div>
 
         <!-- Footer / System Status -->
-        <footer class="mt-12 text-center text-gray-700 text-xs relative z-20">
+        <footer class="mt-12 text-center text-gray-700 text-sm relative z-20">
             <p class="border-t border-dashed border-gray-400 pt-4">
                 // END OF TRANSMISSION // Asset Checksum: 49B4-F2D0-A1C8 |
                 <span class="text-red-600 font-bold">WARNING: SIGNAL DEGRADATION DETECTED</span> |
