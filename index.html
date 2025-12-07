@@ -38,11 +38,11 @@
 
         /* Glitch/Flicker Animation for the Header Text */
         @keyframes flicker {
-            0%   { text-shadow: 0 0 5px rgba(255, 255, 255, 0.5); opacity: 1; }
-            5%   { text-shadow: none; opacity: 0.95; }
-            7%   { text-shadow: 0 0 8px #fff, 0 0 10px #f87171; opacity: 1; }
-            8%   { text-shadow: none; opacity: 0.9; }
-            10%  { text-shadow: 0 0 5px rgba(255, 255, 255, 0.5); opacity: 1; }
+            0% { text-shadow: 0 0 5px rgba(255, 255, 255, 0.5); opacity: 1; }
+            5% { text-shadow: none; opacity: 0.95; }
+            7% { text-shadow: 0 0 8px #fff, 0 0 10px #f87171; opacity: 1; }
+            8% { text-shadow: none; opacity: 0.9; }
+            10% { text-shadow: 0 0 5px rgba(255, 255, 255, 0.5); opacity: 1; }
             100% { text-shadow: 0 0 5px rgba(255, 255, 255, 0.5); opacity: 1; }
         }
         .flicker-text-red {
@@ -105,8 +105,48 @@
             z-index: 20;
             position: relative;
         }
+
+        /* Content page transition effect */
+        .page-content {
+            transition: opacity 0.3s ease-in-out; /* Smooth transition for fade effect */
+        }
         
-        /* Navigation Button Styling remains the same */
+        /* --- WASTE PUNK BUTTON STYLES (Updated to use standard CSS) --- */
+        .nav-button {
+            /* Manually translated from Tailwind classes: px-6 py-3 text-2xl font-bold uppercase tracking-wider transition duration-200 ease-in-out cursor-pointer */
+            padding: 0.75rem 1.5rem; /* py-3 px-6 */
+            font-size: 1.5rem; /* text-2xl */
+            font-weight: 700; /* font-bold */
+            text-transform: uppercase; /* uppercase */
+            letter-spacing: 0.05em; /* tracking-wider */
+            transition: all 0.2s ease-in-out; /* transition duration-200 ease-in-out */
+            cursor: pointer; /* cursor-pointer */
+
+            background-color: #4b5563; /* scrap-metal */
+            color: #fff8e7; /* cosmic-latte */
+            border: 3px solid #a0522d; /* rust */
+            border-radius: 4px; /* Slight rounding for industrial feel */
+            box-shadow: 0 0 5px rgba(160, 82, 45, 0.5); /* Subtle rust glow */
+            text-shadow: 1px 1px 0px #1f2937; /* Grime text shadow for depth */
+            margin-right: 1.5rem; /* Increased spacing */
+        }
+
+        .nav-button:hover {
+            background-color: #5d6674; /* Slightly lighter scrap-metal */
+            border-color: #34d399; /* signal-green on hover */
+            box-shadow: 0 0 15px #34d399, inset 0 0 5px #34d399; /* Strong green glow */
+            transform: translateY(-2px); /* Slight lift */
+        }
+
+        .active-nav {
+            background-color: #34d399; /* signal-green */
+            color: #1f2937; /* grime / dark text */
+            border: 3px solid #6bff16; /* Brighter green border */
+            box-shadow: 0 0 20px #6bff16, inset 0 0 12px rgba(0, 0, 0, 0.9); /* Intense active glow, deeper inset */
+            pointer-events: none; /* Active button shouldn't be clicked */
+            text-shadow: none; /* Flat text when active */
+            transform: translateY(2px); /* Simulate being pressed down */
+        }
 
         /* --- AVATAR MODULE STYLES --- */
         .avatar-container {
@@ -156,8 +196,8 @@
             border-radius: 50%;
             border: 3px solid #fca5a5; /* Red alert ring */
             box-shadow: 0 0 15px #fca5a5;
+            object-fit: cover;
         }
-
     </style>
 </head>
 <body class="font-mono">
@@ -182,7 +222,7 @@
             </div>
         </header>
 
-        <!-- Navigation: Simulated Pages -->
+        <!-- Navigation: Simulated Pages (Updated to use new waste-punk style) -->
         <nav class="flex flex-wrap justify-center space-x-2 sm:space-x-4 mb-8">
             <button id="nav_vibe_coder" onclick="showPage('vibe_coder')" class="nav-button active-nav mb-2">VIBE-CODER</button>
             <button id="nav_game_dev" onclick="showPage('game_dev')" class="nav-button mb-2">GAME-DEV</button>
@@ -192,8 +232,8 @@
         <!-- Content Pages Wrapper -->
         <div id="content_pages">
             
-            <!-- Page 1: VIBE CODER -->
-            <section id="vibe_coder_page" class="page-content waste-punk-panel p-6 sm:p-10 rounded-lg">
+            <!-- Page 1: VIBE CODER (Initial page, opacity 1) -->
+            <section id="vibe_coder_page" class="page-content waste-punk-panel p-6 sm:p-10 rounded-lg" style="opacity: 1;">
                 <div class="profile-content">
                     <h2 class="text-3xl font-semibold mb-6 text-signal-green flex items-center">
                         <span class="text-4xl mr-3 leading-none text-yellow-50">&#9889;</span> VIBE CODER [ALPHA]
@@ -210,8 +250,8 @@
                 </div>
             </section>
 
-            <!-- Page 2: INDIE GAME DEV (Hidden by default) -->
-            <section id="game_dev_page" class="page-content waste-punk-panel p-6 sm:p-10 rounded-lg hidden">
+            <!-- Page 2: INDIE GAME DEV (Hidden by default, opacity 0 for fade-in) -->
+            <section id="game_dev_page" class="page-content waste-punk-panel p-6 sm:p-10 rounded-lg hidden" style="opacity: 0;">
                 <div class="profile-content">
                     <h2 class="text-3xl font-semibold mb-6 text-signal-green flex items-center">
                         <span class="text-4xl mr-3 leading-none text-yellow-50">&#9760;</span> INDIE GAME DEV [BETA]
@@ -228,8 +268,8 @@
                 </div>
             </section>
 
-            <!-- Page 3: ELECTRONICS MASTER (Hidden by default) -->
-            <section id="electronics_page" class="page-content waste-punk-panel p-6 sm:p-10 rounded-lg hidden">
+            <!-- Page 3: ELECTRONICS MASTER (Hidden by default, opacity 0 for fade-in) -->
+            <section id="electronics_page" class="page-content waste-punk-panel p-6 sm:p-10 rounded-lg hidden" style="opacity: 0;">
                 <div class="profile-content">
                     <h2 class="text-3xl font-semibold mb-6 text-signal-green flex items-center">
                         <span class="text-4xl mr-3 leading-none text-yellow-50">&#9881;</span> ELECTRONICS MASTER [GAMMA]
@@ -265,33 +305,58 @@
             <span class="text-xs text-yellow-300 mt-1">[PLAY] Polynomial Protocol</span>
         </a>
         
-        <!-- Avatar Image (Visible) -->
-        <!-- Using a placeholder image for avatar.png -->
-        <img src="avataaars.png" alt="Unit Avatar" class="avatar-image">
+        <!-- Avatar Image (Visible) - Replaced external URL with placeholder -->
+        <img 
+            src="https://placehold.co/80x80/a0522d/fff8e7?text=12" 
+            alt="Unit Avatar" 
+            class="avatar-image"
+            onerror="this.onerror=null; this.src='https://placehold.co/80x80/4b5563/fff8e7?text=ERR'"
+        >
     </div>
 
     <script>
         /**
-         * Simulates a multi-page terminal experience by showing only one content panel.
+         * Simulates a multi-page terminal experience by showing only one content panel with a fade transition.
          * @param {string} pageId - The ID suffix of the page to show (e.g., 'vibe_coder').
          */
         function showPage(pageId) {
-            const pages = document.querySelectorAll('.page-content');
             const navButtons = document.querySelectorAll('.nav-button');
+            const targetPage = document.getElementById(pageId + '_page');
+            const targetNav = document.getElementById('nav_' + pageId);
 
-            // Hide all pages and deactivate all buttons
-            pages.forEach(page => page.classList.add('hidden'));
+            // Deactivate all buttons and activate the target button
             navButtons.forEach(button => button.classList.remove('active-nav'));
+            if (targetNav) targetNav.classList.add('active-nav');
 
-            // Show the selected page and activate the corresponding button
-            const selectedPage = document.getElementById(pageId + '_page');
-            const selectedNav = document.getElementById('nav_' + pageId);
+            const currentPage = document.querySelector('.page-content:not(.hidden)');
+            
+            // Check if the current page is the target page
+            if (currentPage === targetPage) return;
 
-            if (selectedPage) {
-                selectedPage.classList.remove('hidden');
-            }
-            if (selectedNav) {
-                selectedNav.classList.add('active-nav');
+            // 1. Fade out current page
+            if (currentPage) {
+                currentPage.style.opacity = '0'; // Start fade out
+                
+                // Wait for the CSS transition (0.3s) to complete before changing display
+                setTimeout(() => {
+                    currentPage.classList.add('hidden'); // Hide display after fade
+                    
+                    // 2. Show and Fade in the new page
+                    if (targetPage) {
+                        targetPage.style.opacity = '0'; // Ensure new page starts at opacity 0
+                        targetPage.classList.remove('hidden'); // Make display visible
+                        
+                        // Small timeout to allow the browser to register the class change 
+                        // before starting the transition from 0 to 1
+                        setTimeout(() => {
+                            targetPage.style.opacity = '1'; // Start fade in
+                        }, 50); 
+                    }
+                }, 300); // Duration of the CSS transition
+            } else if (targetPage) {
+                // Handle initial state if no current page is found
+                targetPage.classList.remove('hidden');
+                targetPage.style.opacity = '1';
             }
         }
     </script>
