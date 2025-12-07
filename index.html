@@ -3,450 +3,264 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Polynomial Game</title>
+    <title>Junker-Unit Profile // Asset ID 12_Parsec</title>
+    <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@700&display=swap" rel="stylesheet">
-    <!-- Chart.js for the results chart -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Load VT323 (Terminal/Monospaced vibe) font -->
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    
+    <!-- Configure Tailwind for the specific theme and colors -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'cosmic-latte': '#fff8e7', // User requested background
+                        'rust': '#a0522d', // Sienna, for distress/rust
+                        'scrap-metal': '#4b5563', // Gray 600, medium metal
+                        'grime': '#1f2937', // Gray 800, dark industrial background
+                        'signal-green': '#34d399', // Bright green for active elements
+                        'circuit-gray': '#888888', // Light gray for background schematics
+                    },
+                    fontFamily: {
+                        mono: ['VT323', 'monospace'],
+                    }
+                },
+            }
+        }
+    </script>
     <style>
+        /* Apply the specific Cosmic Latte background to the body */
         body {
-            font-family: 'Roboto Mono', monospace;
-            background-color: #1a202c; /* Dark background */
-            color: #fff;
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            background-color: #fff8e7;
             min-height: 100vh;
-            text-align: center;
         }
 
-        #game-container {
+        /* Glitch/Flicker Animation for the Header Text */
+        @keyframes flicker {
+            0%   { text-shadow: 0 0 5px rgba(255, 255, 255, 0.5); opacity: 1; }
+            5%   { text-shadow: none; opacity: 0.95; }
+            7%   { text-shadow: 0 0 8px #fff, 0 0 10px #f87171; opacity: 1; }
+            8%   { text-shadow: none; opacity: 0.9; }
+            10%  { text-shadow: 0 0 5px rgba(255, 255, 255, 0.5); opacity: 1; }
+            100% { text-shadow: 0 0 5px rgba(255, 255, 255, 0.5); opacity: 1; }
+        }
+        .flicker-text {
+            animation: flicker 4s infinite alternate;
+            color: #fca5a5; /* Light Red */
+        }
+
+        /* Scrolling Front-End Artwork: Schematic Background */
+        .scrolling-artwork {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -10; /* Ensures it is always behind content */
+            opacity: 0.2; /* Subtle opacity */
+            background-color: #fff8e7;
+            /* Using a repeating linear gradient to simulate a circuit board pattern */
+            background-image: 
+                linear-gradient(90deg, #d3d3d3 1px, transparent 1px),
+                linear-gradient(#d3d3d3 1px, transparent 1px),
+                repeating-linear-gradient(45deg, #a0522d 0, #a0522d 1px, transparent 1px, transparent 10px);
+            background-size: 50px 50px, 50px 50px, 100% 100%;
+            /* Subtle animation to give a "live schematic" feel */
+            animation: moveArt 60s linear infinite;
+        }
+        @keyframes moveArt {
+            0% { background-position: 0 0; }
+            100% { background-position: 50px 50px; }
+        }
+
+        /* Custom style for the main waste-punk border and texture effect */
+        .waste-punk-panel {
+            background-color: #1f2937; /* Grime */
+            border: 4px solid #a0522d; /* Rust border */
+            box-shadow: 0 0 25px rgba(160, 82, 45, 0.8), inset 0 0 10px rgba(0, 0, 0, 0.5); /* Stronger glow and inset shadow */
             position: relative;
-            background-color: #2d3748; /* Darker container background */
-            padding: 2.5rem;
-            border-radius: 1.5rem;
-            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.5);
-            max-width: 90%;
-            width: 500px;
-            transition: all 0.3s ease-in-out;
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
+            overflow: hidden;
+            min-height: 500px;
         }
-
-        #combo-display {
+        .waste-punk-panel::before {
+            content: '';
             position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            perspective: 1000px;
+            right: 0;
+            bottom: 0;
+            /* Simulating screen noise/grime texture */
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(255, 248, 231, 0.08),
+                rgba(255, 248, 231, 0.08) 1px,
+                transparent 1px,
+                transparent 5px
+            );
             pointer-events: none;
-        }
-
-        .combo-number {
-            position: absolute;
-            font-size: 15vw;
-            font-weight: bold;
-            text-shadow: 0 0 20px rgba(255, 255, 255, 0.8), 0 0 40px rgba(255, 255, 255, 0.6);
-            animation: fadeInOut 1s ease-in-out forwards;
-            opacity: 0;
-            transform: scale(0.5) rotateX(90deg);
-        }
-
-        .streak-text {
-            position: absolute;
-            font-size: 5vw;
-            font-weight: bold;
-            opacity: 0;
-            animation: streakFadeIn 1s ease-in-out forwards;
-        }
-
-        @keyframes fadeInOut {
-            0% {
-                opacity: 0;
-                transform: scale(0.5) rotateX(90deg);
-                text-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
-            }
-            25% {
-                opacity: 1;
-                transform: scale(1) rotateX(0deg);
-                text-shadow: 0 0 20px rgba(255, 255, 255, 0.8), 0 0 40px rgba(255, 255, 255, 0.6);
-            }
-            75% {
-                opacity: 1;
-                transform: scale(1) rotateX(0deg);
-            }
-            100% {
-                opacity: 0;
-                transform: scale(1.5) rotateX(-90deg);
-            }
-        }
-
-        @keyframes sheen {
-            100% {
-                transform: rotateZ(60deg) translate(1em, -9em);
-            }
-            }
-        
-        @keyframes streakFadeIn {
-            0% {
-                opacity: 0;
-            }
-            15% {
-                opacity: 1;
-            }
-            85% {
-                opacity: 1;
-            }
-            100% {
-                opacity: 0;
-            }
-        }
-
-        .game-button {
-            padding: 12px 24px;
-            background-color: #6366f1;
-            color: #fff;
-            border: none;
-            border-radius: 9999px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-        }
-
-        .game-button:hover {
-            background-color: #4f46e5;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.3);
-        }
-
-        .input-field {
-            padding: 12px;
-            border-radius: 0.75rem;
-            border: 2px solid #4a5568;
-            background-color: #1a202c;
-            color: #fff;
-            text-align: center;
-            width: 100%;
-            max-width: 200px;
-            margin: 0 auto; /* This centers the input field */
-        }
-
-        .message {
-            margin-top: 1rem;
-            font-size: 1.2rem;
-            font-weight: bold;
-            height: 1.5rem;
-            transition: all 0.3s ease;
-        }
-        
-        #results-container {
-            display: none;
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(5px);
+            opacity: 0.9;
             z-index: 10;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 2rem;
-            border-radius: 1.5rem;
+        }
+        
+        /* Navigation Button Styling */
+        .nav-button {
+            padding: 0.5rem 1.5rem;
+            border: 2px solid #a0522d;
+            color: #fca5a5;
+            background-color: #374151;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.1s;
+        }
+        .nav-button:hover {
+            background-color: #4b5563;
+            color: #fff;
+            box-shadow: 0 0 10px #34d399;
+        }
+        .active-nav {
+            background-color: #34d399 !important;
+            color: #1f2937 !important;
+            font-weight: bold;
+            border-color: #1f2937 !important;
+            box-shadow: 0 0 15px #34d399;
         }
 
-        #timer {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            font-size: 1.5rem;
-            font-weight: bold;
+        /* Styling for the content of the profile cards inside the main panel */
+        .profile-content {
+            z-index: 20;
+            position: relative;
+        }
+
+        /* Responsive padding for larger screens */
+        @media (min-width: 640px) {
+            .container-wrapper {
+                padding: 2rem;
+            }
         }
     </style>
 </head>
-<body class="flex flex-col items-center justify-center p-8">
-    <div id="game-container">
-        <div id="timer" class="text-xl">60s</div>
-        <h1 class="text-3xl font-bold">Polynomial Game</h1>
-        <div id="problem" class="text-4xl font-bold"></div>
-        <div id="equation" class="text-3xl font-bold"></div>
-        <input type="number" id="x-value-input" class="input-field" placeholder="Enter value for x">
-        <input type="number" id="answer-input" class="input-field" placeholder="Your Answer">
-        <div class="flex justify-center gap-4">
-            <button id="submit-btn" class="game-button">Submit</button>
-        </div>
-        <div id="message" class="message"></div>
-    </div>
+<body class="font-mono">
+    
+    <!-- Scrolling Front-End Artwork Layer (Fixed Position Schematic) -->
+    <div class="scrolling-artwork"></div>
 
-    <div id="combo-display"></div>
+    <div class="max-w-4xl mx-auto container-wrapper relative z-20">
+        
+        <!-- Main Panel: System Header -->
+        <header class="waste-punk-panel p-6 sm:p-10 rounded-lg mb-8">
+            <div class="profile-content">
+                <h1 class="text-3xl sm:text-5xl font-bold text-yellow-50 mb-2 border-b-4 border-signal-green pb-2 uppercase tracking-widest">
+                    // SALVAGED PROFILE //
+                </h1>
+                <p class="text-xl sm:text-2xl text-yellow-300 mb-4">
+                    > IDENTITY: <span class="flicker-text">12_PARSEC</span> <span class="text-red-400">|</span> Asset Status: ACTIVE
+                </p>
+                <p class="text-yellow-100 leading-relaxed text-sm sm:text-base">
+                    System Log: Core directives re-initialized. Unit 12_Parsec specializes in high-impact, low-resource deployment across digital and physical sectors. Operational modes are tested for maximum disruption. Minimal compliance achieved.
+                </p>
+            </div>
+        </header>
 
-    <!-- Results screen -->
-    <div id="results-container">
-        <h2 class="text-4xl font-bold mb-6">Game Over!</h2>
-        <div class="text-xl mb-4">You got <span id="total-correct-answers" class="font-bold text-green-400">0</span> correct answers.</div>
-        <div class="w-full max-w-sm h-72">
-            <canvas id="results-chart"></canvas>
+        <!-- Navigation: Simulated Pages -->
+        <nav class="flex flex-wrap justify-center space-x-2 sm:space-x-4 mb-8">
+            <button id="nav_vibe_coder" onclick="showPage('vibe_coder')" class="nav-button active-nav mb-2">VIBE-CODER</button>
+            <button id="nav_game_dev" onclick="showPage('game_dev')" class="nav-button mb-2">GAME-DEV</button>
+            <button id="nav_electronics" onclick="showPage('electronics')" class="nav-button mb-2">ELEC-MASTER</button>
+        </nav>
+
+        <!-- Content Pages Wrapper -->
+        <div id="content_pages">
+            
+            <!-- Page 1: VIBE CODER -->
+            <section id="vibe_coder_page" class="page-content waste-punk-panel p-6 sm:p-10 rounded-lg">
+                <div class="profile-content">
+                    <h2 class="text-3xl font-semibold mb-6 text-signal-green flex items-center">
+                        <span class="text-4xl mr-3 leading-none text-yellow-50">&#9889;</span> VIBE CODER [ALPHA]
+                    </h2>
+                    <p class="text-xl mb-4 text-yellow-50 border-b border-gray-500 pb-2">
+                        [Directive]: Aesthetic Integrity Protocol
+                    </p>
+                    <ul class="list-disc list-inside text-sm leading-relaxed text-yellow-100 space-y-2 pl-4">
+                        <li>Engineers digital experiences where mood and aesthetic are the primary output.</li>
+                        <li>Writes high-impact, low-compliance code.</li>
+                        <li>Optimizes strictly for *feel* over framework stability.</li>
+                        <li>Code output utilizes salvaged logic gates only.</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Page 2: INDIE GAME DEV (Hidden by default) -->
+            <section id="game_dev_page" class="page-content waste-punk-panel p-6 sm:p-10 rounded-lg hidden">
+                <div class="profile-content">
+                    <h2 class="text-3xl font-semibold mb-6 text-signal-green flex items-center">
+                        <span class="text-4xl mr-3 leading-none text-yellow-50">&#9760;</span> INDIE GAME DEV [BETA]
+                    </h2>
+                    <p class="text-xl mb-4 text-yellow-50 border-b border-gray-500 pb-2">
+                        [Directive]: Resource Scavenging & World Forging
+                    </p>
+                    <ul class="list-disc list-inside text-sm leading-relaxed text-yellow-100 space-y-2 pl-4">
+                        <li>Forges compelling worlds from discarded and unconventional assets.</li>
+                        <li>Specializes in grit-focused narratives built on ruin philosophy.</li>
+                        <li>Minimal assets, maximal emotional impact.</li>
+                        <li>Utilizes salvaged physics routines and custom, low-footprint engines.</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Page 3: ELECTRONICS MASTER (Hidden by default) -->
+            <section id="electronics_page" class="page-content waste-punk-panel p-6 sm:p-10 rounded-lg hidden">
+                <div class="profile-content">
+                    <h2 class="text-3xl font-semibold mb-6 text-signal-green flex items-center">
+                        <span class="text-4xl mr-3 leading-none text-yellow-50">&#9881;</span> ELECTRONICS MASTER [GAMMA]
+                    </h2>
+                    <p class="text-xl mb-4 text-yellow-50 border-b border-gray-500 pb-2">
+                        [Directive]: Analog Signal Reconstitution
+                    </p>
+                    <ul class="list-disc list-inside text-sm leading-relaxed text-yellow-100 space-y-2 pl-4">
+                        <li>Breathes life into e-waste and dead circuits (Arduino/microcontrollers).</li>
+                        <li>Focuses on physical computing, hardware hacking, and tactile interfaces.</li>
+                        <li>Bridges digital command signals to analog, real-world output.</li>
+                        <li>Tinkering with unorthodox sensors and custom circuitry is primary function.</li>
+                    </ul>
+                </div>
+            </section>
         </div>
-        <button id="restart-btn" class="game-button mt-6" anim="sheen">Play Again</button>
+
+        <!-- Footer / System Status -->
+        <footer class="mt-12 text-center text-gray-700 text-xs relative z-20">
+            <p class="border-t border-dashed border-gray-400 pt-4">
+                // END OF TRANSMISSION // Asset Checksum: 49B4-F2D0-A1C8 |
+                <span class="text-red-600 font-bold">WARNING: SIGNAL DEGRADATION DETECTED</span> |
+                <span class="text-gray-500">Log Timestamp: 2049.03.14 @ 17:34 UTC</span>
+            </p>
+        </footer>
     </div>
 
     <script>
-        // Game variables
-        let problemEquation, xValue, answer, operation;
-        let comboStreak = 0;
-        let correctCounts = { '+': 0, '-': 0, '*': 0, '/': 0, '^': 0, 'polynomial': 0 };
-        const operations = ['+', '-', '*', '/', '^', 'polynomial'];
-        let timerId;
+        /**
+         * Simulates a multi-page terminal experience by showing only one content panel.
+         * @param {string} pageId - The ID suffix of the page to show (e.g., 'vibe_coder').
+         */
+        function showPage(pageId) {
+            const pages = document.querySelectorAll('.page-content');
+            const navButtons = document.querySelectorAll('.nav-button');
 
-        // Get elements
-        const gameContainerEl = document.getElementById('game-container');
-        const problemEl = document.getElementById('problem');
-        const equationEl = document.getElementById('equation');
-        const xValueInput = document.getElementById('x-value-input');
-        const answerInput = document.getElementById('answer-input');
-        const submitBtn = document.getElementById('submit-btn');
-        const messageEl = document.getElementById('message');
-        const comboDisplayEl = document.getElementById('combo-display');
-        const timerEl = document.getElementById('timer');
-        const resultsContainerEl = document.getElementById('results-container');
-        const totalCorrectEl = document.getElementById('total-correct-answers');
-        const restartBtn = document.getElementById('restart-btn');
+            // Hide all pages and deactivate all buttons
+            pages.forEach(page => page.classList.add('hidden'));
+            navButtons.forEach(button => button.classList.remove('active-nav'));
 
-        // Chart variables
-        let resultsChart;
-        const chartData = {
-            labels: ['+', '-', '*', '/', '^', 'Polynomial'],
-            datasets: [{
-                label: 'Correct Answers',
-                data: [0, 0, 0, 0, 0, 0],
-                backgroundColor: 'rgba(99, 102, 241, 0.2)',
-                borderColor: 'rgba(99, 102, 241, 1)',
-                borderWidth: 1
-            }]
-        };
+            // Show the selected page and activate the corresponding button
+            const selectedPage = document.getElementById(pageId + '_page');
+            const selectedNav = document.getElementById('nav_' + pageId);
 
-        const chartOptions = {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                r: {
-                    angleLines: {
-                        color: 'rgba(255, 255, 255, 0.3)'
-                    },
-                    grid: {
-                        color: 'rgba(255, 255, 255, 0.3)'
-                    },
-                    pointLabels: {
-                        color: '#fff',
-                        font: {
-                            size: 14
-                        }
-                    },
-                    ticks: {
-                        color: '#fff',
-                        backdropColor: 'transparent',
-                        display: false
-                    },
-                    min: 0,
-                    max: 10,
-                }
-            },
-            plugins: {
-                legend: {
-                    display: false
-                }
+            if (selectedPage) {
+                selectedPage.classList.remove('hidden');
             }
-        };
-
-        // Function to generate a new problem
-        function generateProblem() {
-            // Pick a random operation, including 'polynomial'
-            operation = operations[Math.floor(Math.random() * operations.length)];
-            
-            // Clear previous equation display and x-value input
-            equationEl.textContent = '';
-            xValueInput.style.display = 'none';
-
-            // Generate problem based on the operation
-            if (operation === 'polynomial') {
-                const a = Math.floor(Math.random() * 5) + 1;
-                const b = Math.floor(Math.random() * 5) + 1;
-                const c = Math.floor(Math.random() * 5) + 1;
-                const op1 = Math.random() < 0.5 ? '+' : '-';
-                const op2 = Math.random() < 0.5 ? '+' : '-';
-                problemEquation = `${a}x^2 ${op1} ${b}x ${op2} ${c}`;
-                xValue = Math.floor(Math.random() * 5) + 1;
-                let calculatedAnswer = a * (xValue ** 2);
-                if (op1 === '+') {
-                    calculatedAnswer += b * xValue;
-                } else {
-                    calculatedAnswer -= b * xValue;
-                }
-                if (op2 === '+') {
-                    calculatedAnswer += c;
-                } else {
-                    calculatedAnswer -= c;
-                }
-                answer = calculatedAnswer;
-
-                problemEl.textContent = `If x = ${xValue}, what is...`;
-                equationEl.textContent = problemEquation;
-                xValueInput.value = xValue;
-                xValueInput.style.display = 'block';
-                xValueInput.disabled = true;
-
-            } else {
-                let num1, num2;
-                if (operation === '+') {
-                    num1 = Math.floor(Math.random() * 10) + 1;
-                    num2 = Math.floor(Math.random() * 10) + 1;
-                    answer = num1 + num2;
-                } else if (operation === '-') {
-                    num1 = Math.floor(Math.random() * 10) + 5;
-                    num2 = Math.floor(Math.random() * (num1 - 1)) + 1;
-                    answer = num1 - num2;
-                } else if (operation === '*') {
-                    num1 = Math.floor(Math.random() * 10) + 1;
-                    num2 = Math.floor(Math.random() * 10) + 1;
-                    answer = num1 * num2;
-                } else if (operation === '/') {
-                    num2 = Math.floor(Math.random() * 5) + 2;
-                    num1 = num2 * (Math.floor(Math.random() * 5) + 2);
-                    answer = num1 / num2;
-                } else if (operation === '^') {
-                    num1 = Math.floor(Math.random() * 3) + 2;
-                    num2 = Math.floor(Math.random() * 2) + 2;
-                    answer = Math.pow(num1, num2);
-                }
-                problemEl.textContent = `${num1} ${operation} ${num2}`;
-            }
-
-            answerInput.value = '';
-            messageEl.textContent = '';
-            answerInput.focus();
-        }
-
-        // Function to show the dramatic combo display
-        function showCombo() {
-            comboDisplayEl.innerHTML = '';
-            const comboNumber = document.createElement('div');
-            comboNumber.className = 'combo-number';
-            comboNumber.textContent = comboStreak;
-
-            const streakText = document.createElement('div');
-            streakText.className = 'streak-text';
-            streakText.textContent = `COMBO STREAK!`;
-
-            comboDisplayEl.appendChild(comboNumber);
-            comboDisplayEl.appendChild(streakText);
-        }
-
-        // Handle submission
-        function handleSubmit() {
-            const userAnswer = parseInt(answerInput.value, 10);
-            
-            if (userAnswer === answer) {
-                comboStreak++;
-                messageEl.textContent = 'Correct!';
-                messageEl.style.color = '#34d399'; // Green
-                showCombo();
-                // Update correct counts
-                if (operation === 'polynomial') {
-                    correctCounts['polynomial']++;
-                } else {
-                    correctCounts[operation]++;
-                }
-                
-                setTimeout(generateProblem, 1000); // Wait 1s before new problem
-            } else {
-                comboStreak = 0;
-                messageEl.textContent = 'Incorrect. Combo reset!';
-                messageEl.style.color = '#ef4444'; // Red
-                setTimeout(() => {
-                    comboDisplayEl.innerHTML = ''; // Clear combo display
-                    generateProblem();
-                }, 1000);
+            if (selectedNav) {
+                selectedNav.classList.add('active-nav');
             }
         }
-
-        // Start the game timer
-        function startTimer() {
-            let timeLeft = 60;
-            timerEl.textContent = `${timeLeft}s`;
-
-            timerId = setInterval(() => {
-                timeLeft--;
-                timerEl.textContent = `${timeLeft}s`;
-                if (timeLeft <= 0) {
-                    endGame();
-                }
-            }, 1000);
-        }
-        
-        // End the game
-        function endGame() {
-            clearInterval(timerId);
-            gameContainerEl.style.display = 'none';
-            resultsContainerEl.style.display = 'flex';
-            
-            // Update the chart data
-            chartData.datasets[0].data = [
-                correctCounts['+'],
-                correctCounts['-'],
-                correctCounts['*'],
-                correctCounts['/'],
-                correctCounts['^'],
-                correctCounts['polynomial']
-            ];
-
-            // Calculate total correct answers
-            const totalCorrect = Object.values(correctCounts).reduce((a, b) => a + b, 0);
-            totalCorrectEl.textContent = totalCorrect;
-
-            // Render the chart
-            const ctx = document.getElementById('results-chart').getContext('2d');
-            resultsChart = new Chart(ctx, {
-                type: 'radar',
-                data: chartData,
-                options: chartOptions
-            });
-        }
-
-        // Restart the game
-        restartBtn.addEventListener('click', () => {
-            resultsContainerEl.style.display = 'none';
-            gameContainerEl.style.display = 'flex';
-            comboStreak = 0;
-            correctCounts = { '+': 0, '-': 0, '*': 0, '/': 0, '^': 0, 'polynomial': 0 };
-            if (resultsChart) {
-                resultsChart.destroy();
-            }
-            generateProblem();
-            startTimer();
-        });
-
-        // Add event listeners
-        submitBtn.addEventListener('click', handleSubmit);
-        answerInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                handleSubmit();
-            }
-        });
-
-        // Start the game on page load
-        window.onload = () => {
-            generateProblem();
-            startTimer();
-        };
     </script>
 </body>
 </html>
