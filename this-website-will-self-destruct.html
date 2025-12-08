@@ -8,26 +8,34 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <script type="module">
-        // --- SUPABASE IMPORTS (Faster, Open-Source Alternative to Firebase) ---
-        // You will need to replace the placeholders below with your actual Supabase project keys.
-        const SUPABASE_URL = 'https://yhvopebaclgnjdibkmdv.supabase.co'; // e.g., 'https://xyz123.supabase.co'
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlodm9wZWJhY2xnbmpkaWJrbWR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxOTgzMTcsImV4cCI6MjA4MDc3NDMxN30.MTDkLq0Df5ep16u165dMvyOkwGBCFEL3uavTof7DkW8';
+        // --- FIREBASE IMPORTS ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        // 🚨 IMPORTANT: Added setDoc and getDoc for timer management
+        import { getFirestore, doc, addDoc, onSnapshot, collection, query, limit, orderBy, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
-
-        // --- GLOBAL VARIABLES & SUPABASE SETUP ---
+        // --- GLOBAL VARIABLES & FIREBASE SETUP ---
         let userId = null;
-        let supabase = null;
+        let db = null;
+        let auth = null;
         let countdownInterval;
+        let logUnsubscribe; // Firestore listener unsubscribe function
+        let timerUnsubscribe; // 🚨 NEW: Timer listener unsubscribe function
         let isAuthReady = false;
 
-        // Supabase table names for persistence
-        const DESTRUCTION_TIME_TABLE = 'global_timer';
-        const PUBLIC_LOGS_TABLE = 'public_logs';
+        // Use global variables provided by the Canvas environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
-        // Global timestamp for the persistent clock
-        let destructionTimeGlobal = 0;
-        const INITIAL_REMAINING_SECONDS = 24 * 60 * 60; // 24 hours
+        // Firestore paths
+        const PUBLIC_LOGS_COLLECTION = `artifacts/${appId}/public/data/logs`;
+        // 🚨 NEW: Path for the single, shared timer document
+        let GLOBAL_TIMER_DOC; // Will be initialized in initializeApp
+
+        // Initial destruction time (24 hours in milliseconds)
+        const INITIAL_REMAINING_SECONDS = 24 * 60 * 60;
+        let destructionTimeGlobal = 0; // 🚨 NEW: Global timestamp derived from Firestore
 
         // --- UI ELEMENTS ---
         const countdownEl = document.getElementById('countdown');
@@ -38,33 +46,53 @@
 
 
         /**
-         * Initializes Supabase, performs authentication, and sets up state.
+         * Initializes Firebase, performs authentication, and sets up state.
          */
         async function initializeApp() {
-            if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-                console.error("Supabase config is missing.");
+            if (!firebaseConfig) {
+                console.error("Firebase config is missing.");
                 alertUser("SYSTEM ERROR: Database configuration missing. Logs cannot be saved.", 'red');
                 return;
             }
 
-            // 1. Initialize Supabase Client
-            supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            const app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+            // 🚨 Initialize the global timer document reference
+            GLOBAL_TIMER_DOC = doc(db, `artifacts/${appId}/timer/config`);
 
-            // 2. Mock Authentication (or use actual Supabase Auth)
-            // We will use a client-side UID for now, as Supabase Auth setup is complex.
-            userId = crypto.randomUUID();
-            isAuthReady = true;
-            userIdDisplayEl.textContent = `USER ID: ${userId}`;
 
-            // 3. Start App functions only after auth is ready
-            await initializeCountdown();
-            startLogListener();
+            // 1. Handle Authentication
+            if (initialAuthToken) {
+                await signInWithCustomToken(auth, initialAuthToken).catch(e => {
+                    console.error("Custom sign-in failed:", e);
+                    return signInAnonymously(auth);
+                });
+            } else {
+                await signInAnonymously(auth);
+            }
+
+            // 2. Set up Auth State Listener
+            onAuthStateChanged(auth, (user) => {
+                isAuthReady = true;
+                if (user) {
+                    userId = user.uid;
+                } else {
+                    userId = crypto.randomUUID();
+                }
+                userIdDisplayEl.textContent = `USER ID: ${userId}`;
+
+                // 3. Start App functions only after auth is ready
+                initializeCountdown(); // Setup button actions
+                startLogListener();    // Start log feed
+                startTimerListener();  // 🚨 Start global timer sync
+            });
         }
 
 
-        // --- LOGIC FOR SAVING LOGS (via Supabase) ---
+        // --- LOGIC FOR SAVING LOGS (via Firestore) ---
         async function saveLog() {
-            if (!supabase || !userId || !isAuthReady) {
+            if (!db || !userId || !isAuthReady) {
                 alertUser("LOG FAILED: System initialization incomplete.", 'red');
                 return;
             }
@@ -79,99 +107,149 @@
 
             const logEntry = {
                 text: logText,
-                author_id: userId, // Using snake_case for Supabase column
-                is_public: isPublic,
-                timestamp: new Date().toISOString() // ISO format for Postgres/Supabase
+                authorId: userId,
+                isPublic: isPublic,
+                timestamp: Date.now()
             };
 
             try {
+                // Public logs are saved to a general collection
                 if (isPublic) {
-                    const { error } = await supabase
-                        .from(PUBLIC_LOGS_TABLE)
-                        .insert([logEntry]);
-
-                    if (error) throw error;
+                    await addDoc(collection(db, PUBLIC_LOGS_COLLECTION), logEntry);
                 } else {
-                    // For private logs, a real app would use Supabase's Row-Level Security (RLS)
-                    alertUser(`Private log transmitted! (Note: Private logs need RLS setup in Supabase)`, 'yellow');
-                    document.getElementById('logText').value = '';
-                    document.getElementById('isPublic').checked = false;
-                    return;
+                    // Private logs stored under user's specific path
+                    const privateCollectionPath = `artifacts/${appId}/users/${userId}/private_logs`;
+                    await addDoc(collection(db, privateCollectionPath), logEntry);
                 }
 
                 document.getElementById('logText').value = '';
                 document.getElementById('isPublic').checked = false;
-                alertUser(`Log transmitted! Visibility: PUBLIC BROADCAST.`, 'green');
+                alertUser(`Log transmitted! Visibility: ${isPublic ? 'PUBLIC BROADCAST' : 'PRIVATE CACHE'}.`, isPublic ? 'green' : 'yellow');
 
             } catch (e) {
-                console.error("Error saving log to Supabase: ", e);
+                console.error("Error saving log to Firestore: ", e);
                 alertUser("ERROR: Data transmission failed. Check connection.", 'red');
             }
         }
 
-        // --- LOGIC FOR DISPLAYING PUBLIC LOGS (via Supabase Realtime) ---
-        function renderLogs(logs) {
-            publicLogsContainer.innerHTML = '';
+        // --- LOGIC FOR DISPLAYING PUBLIC LOGS (via Firestore Listener) ---
+        function startLogListener() {
+            if (!db || !isAuthReady || !userId) return;
 
-            if (!logs || logs.length === 0) {
-                publicLogsContainer.innerHTML = '<p class="text-xs text-rust-color-soft p-2">No public transmissions found. Start the feed.</p>';
-                return;
-            }
+            // Clear existing listener if one exists
+            if (logUnsubscribe) logUnsubscribe();
 
-            logs.forEach((data) => {
-                const date = new Date(data.timestamp); // Supabase returns ISO string
-                const timeString = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-                const dateString = date.toLocaleDateString('en-US');
+            // Query: latest 5 logs, ordered by timestamp
+            const logQuery = query(
+                collection(db, PUBLIC_LOGS_COLLECTION),
+                orderBy('timestamp', 'desc'),
+                limit(5)
+            );
 
-                const logItem = document.createElement('div');
-                logItem.className = 'p-2 border-b border-soft-red last:border-b-0';
-                logItem.innerHTML = `
-                    <p class="text-xs text-rust-color-soft mb-1">
-                        LOG ID: ${String(data.author_id).substring(0, 8)} | TIME: ${dateString} ${timeString}
-                    </p>
-                    <p class="text-sm text-theme-color break-words">${data.text}</p>
-                `;
-                publicLogsContainer.appendChild(logItem);
+            logUnsubscribe = onSnapshot(logQuery, (snapshot) => {
+                publicLogsContainer.innerHTML = '';
+                const logs = [];
+
+                snapshot.forEach(doc => {
+                    logs.push(doc.data());
+                });
+
+                if (logs.length === 0) {
+                    publicLogsContainer.innerHTML = '<p class="text-xs text-rust-color-soft p-2">No public transmissions found. Start the feed.</p>';
+                    return;
+                }
+
+                logs.forEach((data) => {
+                    const date = new Date(data.timestamp);
+                    const timeString = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                    const dateString = date.toLocaleDateString('en-US');
+
+                    // Create log element
+                    const logItem = document.createElement('div');
+                    logItem.className = 'p-2 border-b border-soft-red last:border-b-0';
+                    logItem.innerHTML = `
+                        <p class="text-xs text-rust-color-soft mb-1">
+                            LOG ID: ${String(data.authorId).substring(0, 8)} | TIME: ${dateString} ${timeString}
+                        </p>
+                        <p class="text-sm text-theme-color break-words">${data.text}</p>
+                    `;
+                    publicLogsContainer.appendChild(logItem);
+                });
+            }, (error) => {
+                console.error("Firestore Listener Error:", error);
+                publicLogsContainer.innerHTML = '<p class="text-xs text-soft-red p-2">Error listening to logs. Data feed interrupted.</p>';
             });
         }
 
-        function startLogListener() {
-            if (!supabase || !isAuthReady || !userId) return;
 
-            // 1. Initial Fetch: Get the latest 5 logs
-            supabase
-                .from(PUBLIC_LOGS_TABLE)
-                .select('*')
-                .order('timestamp', { ascending: false })
-                .limit(5)
-                .then(({ data, error }) => {
-                    if (error) {
-                        console.error("Supabase initial fetch error:", error);
-                        publicLogsContainer.innerHTML = '<p class="text-xs text-soft-red p-2">Error listening to logs. Data feed interrupted.</p>';
-                        return;
-                    }
-                    renderLogs(data);
-                });
+        // --- COUNTDOWN LOGIC (Uses Shared Firestore Time) ---
 
-            // 2. Realtime Listener: Subscribe to all new inserts
-            // This is much faster than polling or Firestore's general snapshot listener
-            supabase
-                .channel('public_logs_channel')
-                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: PUBLIC_LOGS_TABLE }, (payload) => {
-                    // Re-fetch the latest 5 to maintain the 'limit 5' and correct order
-                    supabase
-                        .from(PUBLIC_LOGS_TABLE)
-                        .select('*')
-                        .order('timestamp', { ascending: false })
-                        .limit(5)
-                        .then(({ data }) => {
-                            renderLogs(data);
-                        });
-                })
-                .subscribe();
+        /**
+         * Ensures the global timer document exists in Firestore and is valid.
+         * If not, it initializes a new 24-hour countdown.
+         */
+        async function checkAndInitializeTimer() {
+            if (!db || !GLOBAL_TIMER_DOC || !userId) return;
+
+            const timerSnap = await getDoc(GLOBAL_TIMER_DOC);
+            const currentTime = new Date().getTime();
+            const newDestructionTime = currentTime + INITIAL_REMAINING_SECONDS * 1000;
+
+            if (!timerSnap.exists() || timerSnap.data().destructionTime < currentTime) {
+                // Timer doesn't exist or has already expired, set a new one
+                await setDoc(GLOBAL_TIMER_DOC, {
+                    destructionTime: newDestructionTime,
+                    lastOverrideBy: userId,
+                    lastOverrideTime: currentTime,
+                    status: 'INITIATED'
+                }, { merge: true });
+            }
         }
 
-        // --- COUNTDOWN LOGIC (Uses Global Timer) ---
+        /**
+         * Sets up a real-time listener to sync the global countdown.
+         */
+        function startTimerListener() {
+            if (!db || !GLOBAL_TIMER_DOC) return;
+
+            if (timerUnsubscribe) timerUnsubscribe(); // Clear existing listener
+
+            // 1. Ensure the timer document is present/valid in the DB
+            checkAndInitializeTimer();
+
+            // 2. Start listening for changes
+            timerUnsubscribe = onSnapshot(GLOBAL_TIMER_DOC, (doc) => {
+                if (doc.exists()) {
+                    const data = doc.data();
+                    const newTime = data.destructionTime;
+
+                    // Only update and reset the interval if the time actually changed (e.g., another user overrode)
+                    if (newTime !== destructionTimeGlobal) {
+                        destructionTimeGlobal = newTime;
+
+                        // Clear and restart the client-side interval to ensure smooth update
+                        if (countdownInterval) clearInterval(countdownInterval);
+                        countdownInterval = setInterval(updateCountdown, 1000);
+
+                        // Update status message
+                        const statusMessage = newTime > new Date().getTime()
+                            ? `STATUS: RESYNCED. GLOBAL TIMER ACTIVE. (LAST OVERRIDE BY: ${String(data.lastOverrideBy || 'SYSTEM').substring(0, 8)})`
+                            : `STATUS: EXPIRED. DECOMMISSION IMMINENT.`;
+
+                        messageEl.innerHTML = `<p class="text-xs text-soft-green">${statusMessage}</p>`;
+                    }
+                } else {
+                    // Document deleted or not found, force initialization
+                    checkAndInitializeTimer();
+                }
+                // Initial call to update the UI immediately
+                updateCountdown();
+            }, (error) => {
+                console.error("Firestore Timer Listener Error:", error);
+                messageEl.innerHTML = '<p class="text-xs text-soft-red">STATUS: ERROR. GLOBAL TIME FEED INTERRUPTED.</p>';
+            });
+        }
+
 
         function formatTime(totalSeconds) {
             const seconds = Math.floor(totalSeconds % 60);
@@ -186,11 +264,11 @@
 
         function updateCountdown() {
             const now = new Date().getTime();
-            // NOW USING destructionTimeGlobal for synchronization
+            // Use the globally synced timestamp
             let totalSecondsRemaining = Math.max(0, (destructionTimeGlobal - now) / 1000);
 
             if (totalSecondsRemaining <= 0) {
-                clearInterval(countdownInterval);
+                if (countdownInterval) clearInterval(countdownInterval);
                 totalSecondsRemaining = 0;
                 countdownEl.innerHTML = `00:00:00:00`;
                 triggerDestruction();
@@ -200,113 +278,75 @@
             countdownEl.innerHTML = formatTime(totalSecondsRemaining);
 
             if (totalSecondsRemaining < 3600) {
+                // Last hour: Flash red
                 countdownEl.style.color = 'var(--soft-red)';
                 countdownEl.style.textShadow = '0 0 10px var(--soft-red), 0 0 20px var(--soft-red)';
             } else {
+                // Normal state: Soft green
                 countdownEl.style.color = 'var(--soft-green)';
                 countdownEl.style.textShadow = 'var(--glitch-shadow)';
             }
         }
 
         function triggerDestruction() {
-            // ... (This function remains unchanged) ...
             messageEl.innerHTML = `
                 <p class="text-xl text-soft-red glitch-text">!!! DECOMMISSION COMPLETE !!!</p>
                 <p class="text-sm text-theme-color">SYSTEM OFFLINE. DATA PURGE 100%. ACCESS TERMINATED.</p>
                 <p class="text-xs mt-2">-- WASTE PUNK PROTOCOL 404 --</p>
             `;
             actionButtonEl.textContent = 'REBOOT SYSTEM (RESTART COUNTDOWN)';
-            actionButtonEl.onclick = initializeCountdown;
+            actionButtonEl.onclick = initializeCountdown; // Will trigger re-initialization of DB time
             document.body.style.backgroundColor = 'var(--theme-color)';
             countdownEl.classList.remove('glitch-text');
             countdownEl.style.color = '#ccc';
         }
 
-
+        // 🚨 Refactored to update the global timestamp in Firestore
         async function attemptOverride() {
+            if (!db || !userId || !GLOBAL_TIMER_DOC) {
+                alertUser("GLOBAL OVERRIDE FAILED: System initialization incomplete.", 'red');
+                return;
+            }
+
             actionButtonEl.disabled = true;
             actionButtonEl.textContent = 'OVERRIDE INITIATED...';
 
-            // Reset the global time
-            destructionTimeGlobal = new Date().getTime() + INITIAL_REMAINING_SECONDS * 1000;
-            const expiration_timestamp = new Date(destructionTimeGlobal).toISOString();
-
             try {
-                // Update the single timer row in Supabase
-                const { error } = await supabase
-                    .from(DESTRUCTION_TIME_TABLE)
-                    .update({ expiration_timestamp: expiration_timestamp })
-                    .neq('id', 'null'); // Use a condition to ensure all rows (or the single row) are updated
+                // Calculate the new expiration time
+                const newDestructionTime = new Date().getTime() + INITIAL_REMAINING_SECONDS * 1000;
 
-                if (error) throw error;
+                // Update the global timestamp in Firestore, which triggers the onSnapshot listener for ALL users
+                await setDoc(GLOBAL_TIMER_DOC, {
+                    destructionTime: newDestructionTime,
+                    lastOverrideBy: userId,
+                    lastOverrideTime: Date.now(),
+                    status: 'OVERRIDDEN'
+                }, { merge: true });
 
-                messageEl.innerHTML = `<p class="text-lg text-soft-green">[[ GLOBAL OVERRIDE SUCCESSFUL ]]</p><p class="text-sm">CLOCK RESET. NEW CYCLE INITIATED. (TIMER: GLOBAL)</p>`;
+                // The listener handles the UI update on success
+                messageEl.innerHTML = `<p class="text-lg text-soft-green">[[ GLOBAL OVERRIDE SUCCESSFUL ]]</p><p class="text-sm">CLOCK RESET. NEW CYCLE INITIATED. (TIMER: GLOBAL-PERSISTENT)</p>`;
 
             } catch (e) {
-                console.error("Error performing global override:", e);
-                messageEl.innerHTML = `<p class="text-lg text-soft-red">!!! GLOBAL OVERRIDE FAILED !!!</p><p class="text-sm">ERROR: ${e.message}</p>`;
-                // Revert or fallback on failure
+                console.error("Error setting timer in Firestore: ", e);
+                alertUser("ERROR: GLOBAL OVERRIDE FAILED. Database write error.", 'red');
             }
 
             actionButtonEl.disabled = false;
             actionButtonEl.textContent = 'ATTEMPT SYSTEM OVERRIDE (DANGEROUS)';
-            initializeCountdown(); // Re-sync and restart the client interval
         }
 
 
-        async function initializeCountdown() {
-            if (countdownInterval) clearInterval(countdownInterval);
-
-            messageEl.innerHTML = `<p class="text-xs text-soft-green">STATUS: FETCHING GLOBAL TIME...</p>`;
-
-            try {
-                // 1. Fetch the single global timer entry
-                let { data, error } = await supabase
-                    .from(DESTRUCTION_TIME_TABLE)
-                    .select('expiration_timestamp')
-                    .limit(1)
-                    .single();
-
-                // Ignore 'no rows found' error (PGRST116) as it means we need to create the time.
-                if (error && error.code !== 'PGRST116') {
-                    throw error;
-                }
-
-                if (data) {
-                    // Found existing global timer
-                    destructionTimeGlobal = new Date(data.expiration_timestamp).getTime();
-                    messageEl.innerHTML = `<p class="text-xs text-soft-green">STATUS: GLOBAL TIME SYNCED. (TIMER: GLOBAL)</p>`;
-                } else {
-                    // No global timer found, set a new one
-                    destructionTimeGlobal = new Date().getTime() + INITIAL_REMAINING_SECONDS * 1000;
-                    const expiration_timestamp = new Date(destructionTimeGlobal).toISOString();
-
-                    // 2. Insert the new global time
-                    const { error: insertError } = await supabase
-                        .from(DESTRUCTION_TIME_TABLE)
-                        .insert([{ expiration_timestamp: expiration_timestamp }]);
-
-                    if (insertError) throw insertError;
-                    messageEl.innerHTML = `<p class="text-xs text-soft-green">STATUS: GLOBAL TIME INITIALIZED. (TIMER: GLOBAL)</p>`;
-                }
-            } catch (e) {
-                console.error("Error synchronizing global time with Supabase:", e);
-                // 3. Fallback to local time if global sync fails
-                destructionTimeGlobal = new Date().getTime() + INITIAL_REMAINING_SECONDS * 1000;
-                messageEl.innerHTML = `<p class="text-sm text-soft-red">!!! WARNING: GLOBAL TIME SYNC FAILED !!!</p><p class="text-xs">FALLING BACK TO LOCAL TIMER. (TIMER: LOCAL)</p>`;
-            }
-
-
+        function initializeCountdown() {
+            // The actual time syncing is handled by startTimerListener
             actionButtonEl.onclick = attemptOverride;
             document.body.style.backgroundColor = 'var(--bg-color)';
             countdownEl.classList.add('glitch-text');
             countdownEl.style.textShadow = 'var(--glitch-shadow)';
 
-            updateCountdown();
-            countdownInterval = setInterval(updateCountdown, 1000);
+            messageEl.innerHTML = `<p class="text-xs text-soft-green">STATUS: SYNCING GLOBAL TIMER... (TIMER: GLOBAL-PERSISTENT)</p>`;
         }
 
-        // --- CUSTOM ALERT FUNCTION (Unchanged) ---
+        // --- CUSTOM ALERT FUNCTION (Replacing alert()) ---
         function alertUser(message, color = 'red') {
             const alertBox = document.getElementById('logAlert');
             alertBox.textContent = `[MESSAGE]: ${message}`;
@@ -526,15 +566,12 @@
 <body class="p-4 flex items-center justify-center">
 
     <div id="app" class="waste-punk-box text-center">
-        <!-- Header -->
         <h1 class="text-xl md:text-2xl text-soft-red mb-6 border-b-2 border-soft-red pb-2">
             <span class="glitch-text">SCAV-NET TERMINAL: 24 HR DECOMMISSION</span>
         </h1>
 
-        <!-- User ID Display -->
         <p id="userIdDisplay" class="text-xs text-rust-color-soft mb-4 break-all">USER ID: INITIALIZING...</p>
 
-        <!-- Countdown Display -->
         <div class="mb-8">
             <div id="countdown" class="countdown-display glitch-text">--:--:--:--</div>
             <div class="flex justify-around mt-2 text-sm md:text-base">
@@ -545,17 +582,14 @@
             </div>
         </div>
 
-        <!-- Status Message Box (Local Timer Status) -->
         <div id="message" class="message-box text-left mb-6">
             <p class="text-xs text-soft-green">STATUS: CHECKING SYSTEM INTEGRITY...</p>
         </div>
 
-        <!-- Action Button (Override) -->
         <button id="actionButton" class="broken-button w-full py-3 rounded-none">
             ATTEMPT SYSTEM OVERRIDE (DANGEROUS)
         </button>
 
-        <!-- System Log Section -->
         <div class="mt-8 border-t-2 border-soft-red pt-6">
             <h2 class="text-xl text-soft-red mb-4 border-b border-soft-red pb-1">
                 <span class="glitch-text">SURVIVOR LOG ENTRY</span>
@@ -576,7 +610,6 @@
 
             <div id="logAlert" class="message-box mt-4 text-rust-color-soft">SYSTEM LOG STATUS: READY.</div>
 
-            <!-- Display Public Logs -->
             <h3 class="text-lg text-rust-color-soft mt-6 mb-2">PUBLIC CACHE (LATEST TRANSMISSIONS)</h3>
             <div id="publicLogs" class="space-y-3 max-h-60 overflow-y-auto p-2 border border-soft-red">
                 <p class="text-xs text-rust-color-soft">Awaiting public transmissions...</p>
