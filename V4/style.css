@@ -1,0 +1,249 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+table {
+    border-collapse: collapse;
+}
+
+#questionCard {
+    transition: background-color 0.5s ease-out;
+}
+
+.panel {
+    border: 2px solid rgba(79, 70, 229, 0.25);
+}
+
+.compact-scroll {
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+.h-question-card {
+    height: var(--question-card-height, auto);
+}
+
+:root {
+    --bg-image-url: url('bgi.jpg');
+    /* Update this if the background image moves */
+    --panel-overlay-light: rgba(255, 255, 255, 0.82);
+    --panel-overlay-dark: rgba(31, 41, 55, 0.82);
+}
+
+body {
+    position: relative;
+    background-image: var(--bg-image-url);
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+}
+
+.logo-image {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    width: 220px;
+    height: auto;
+    z-index: 100;
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    mix-blend-mode: multiply;
+    backdrop-filter: blur(2px);
+    z-index: -1;
+}
+
+.panel {
+    position: relative;
+    overflow: hidden;
+    background-color: transparent;
+    backdrop-filter: blur(1px);
+    --bg-fragment-x: 50%;
+    --bg-fragment-y: 50%;
+    --bg-fragment-size: cover;
+}
+
+.panel::before,
+.panel::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    border-radius: inherit;
+}
+
+.panel::before {
+    background-image: var(--bg-image-url);
+    background-position: var(--bg-fragment-x) var(--bg-fragment-y);
+    background-size: var(--bg-fragment-size);
+    opacity: 0.75;
+    filter: saturate(0.8);
+    transition: opacity 150ms ease, transform 150ms ease, background-position 180ms ease-out;
+}
+
+.panel::after {
+    background: linear-gradient(135deg, rgba(23, 23, 23, 0.9), rgba(31, 41, 55, 0.85));
+}
+
+.dark .panel::after {
+    background: linear-gradient(135deg, rgba(10, 10, 10, 0.9), rgba(15, 23, 42, 0.85));
+}
+
+.panel:hover::before {
+    opacity: 0.75;
+    transform: scale(1.03);
+}
+
+.panel>* {
+    position: relative;
+    z-index: 1;
+}
+
+/* Keyframes for Answer Reveal Flash (1.5s duration) */
+@keyframes answer-flash {
+    0% {
+        background-color: #fcd34d;
+    }
+
+    30% {
+        background-color: #f59e0b;
+    }
+
+    100% {
+        background-color: #ffffff;
+    }
+}
+
+.flash-effect-reveal {
+    animation: answer-flash 1.5s ease-in-out;
+}
+
+/* Keyframes for Score Update Pop */
+@keyframes score-update {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.25);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.score-update-effect {
+    animation: score-update 0.3s ease-out;
+}
+
+/* Keyframes for Final Bonus Burst */
+@keyframes bonus-score-burst {
+    0% {
+        transform: scale(1);
+        color: inherit;
+        text-shadow: none;
+    }
+
+    25% {
+        transform: scale(1.5);
+        color: #f59e0b;
+        text-shadow: 0 0 8px #fde68a;
+    }
+
+    50% {
+        transform: scale(1.2);
+        color: #f59e0b;
+    }
+
+    100% {
+        transform: scale(1);
+        color: inherit;
+        text-shadow: none;
+    }
+}
+
+.bonus-burst-effect {
+    animation: bonus-score-burst 0.7s ease-in-out;
+}
+
+.team-row:hover {
+    background-color: #f3f4f6;
+    cursor: default;
+    /* Changed from pointer as row is not interactive */
+}
+
+/* Slim scrollbars for tall panels */
+.compact-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+
+.compact-scroll::-webkit-scrollbar-thumb {
+    background-color: rgba(79, 70, 229, 0.45);
+    border-radius: 4px;
+}
+
+.compact-scroll::-webkit-scrollbar-track {
+    background-color: rgba(229, 231, 235, 0.5);
+}
+
+#bigBenContainer {
+    position: fixed;
+    bottom: 300px;
+    right: -50px;
+    width: 400px;
+    z-index: 50;
+    cursor: pointer;
+    transition: transform 0.1s ease-in-out;
+}
+
+#bigBenContainer:active {
+    transform: scale(0.98);
+}
+
+#timerDisplay {
+    --timer-top: 25.5%;
+    /* Position from the top of the container */
+    --timer-left: 50%;
+    /* Position from the left of the container */
+    position: absolute;
+    top: var(--timer-top);
+    left: var(--timer-left);
+    transform: translate(-50%, 170%);
+    width: 75px;
+    height: 75px;
+    background-color: rgba(0, 0, 0, 0.7);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #a3a3a3;
+}
+
+#timerValue {
+    font-size: 24px;
+    color: white;
+    font-weight: bold;
+}
+
+/* NEW: Avatar Positioning */
+#avatarImage {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    height: 200px;
+    width: 200px;
+    z-index: 60;
+    /* Higher than Big Ben (50) */
+    object-fit: cover;
+    border-radius: 8px;
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5));
+    pointer-events: none;
+    /* Let clicks pass through if needed, though it's in the corner */
+}
