@@ -740,7 +740,31 @@ function initializeQuestions() {
     const status = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_QUESTION_STATUS) || '[]');
 
     const rawQuestions = [];
-    geographyQuestions.forEach(q => {
+    geographyQuestions.forEach((q, idx) => {
+        // Insert round separator transitions before first question of each round
+        if (q.id && q.id.startsWith("R2 ") && idx > 0 && !geographyQuestions[idx - 1].id.startsWith("R2")) {
+            rawQuestions.push({
+                id: "ROUND-SEPARATOR-1-2",
+                type: "transition",
+                text: "第一轮结束\n第二轮开始",
+                points: 0,
+                answer: "",
+                rationale: "",
+                isRoundSeparator: true
+            });
+        }
+        if (q.id && q.id.startsWith("R3 ") && idx > 0 && !geographyQuestions[idx - 1].id.startsWith("R3")) {
+            rawQuestions.push({
+                id: "ROUND-SEPARATOR-2-3",
+                type: "transition",
+                text: "第二轮结束\n第三轮开始（个人赛模式）",
+                points: 0,
+                answer: "",
+                rationale: "",
+                isRoundSeparator: true
+            });
+        }
+
         if (q.id && (q.id.includes('抢答题') || q.id.includes('加赛抢答题'))) {
             // Check if we should insert a "Ready" slide
             rawQuestions.push({
@@ -1550,15 +1574,18 @@ function finishRound1() {
         saveRoundState();
         saveTeams();
 
-        // Find first question of Round 2 (we'll navigate to a separator page first)
-        const r2Index = questions.findIndex(q => q.id.startsWith("R2"));
-        if (r2Index === -1) {
-            console.warn("Could not find start of Round 2");
+        // Find the round separator transition (1→2)
+        const separatorIndex = questions.findIndex(q => q.id === "ROUND-SEPARATOR-1-2");
+        if (separatorIndex !== -1) {
+            loadQuestion(separatorIndex);
+        } else {
+            console.warn("Could not find round separator 1→2");
+            // Fallback: find first question of Round 2
+            const r2Index = questions.findIndex(q => q.id.startsWith("R2"));
+            if (r2Index !== -1) {
+                loadQuestion(r2Index);
+            }
         }
-
-        // Navigate to the round separator page so the host can announce the transition.
-        // The separator will write `quizCurrentIndex` into localStorage and return to `geofun.html`.
-        window.location.href = `round-separator.html?from=1&to=2&startIndex=${r2Index}`;
     }
 }
 
@@ -1597,14 +1624,18 @@ function finishRound2() {
         saveRoundState();
         saveTeams();
 
-        // Find first question of Round 3 (we'll navigate to a separator page first)
-        const r3Index = questions.findIndex(q => q.id.startsWith("R3"));
-        if (r3Index === -1) {
-            console.warn("Could not find start of Round 3");
+        // Find the round separator transition (2→3)
+        const separatorIndex = questions.findIndex(q => q.id === "ROUND-SEPARATOR-2-3");
+        if (separatorIndex !== -1) {
+            loadQuestion(separatorIndex);
+        } else {
+            console.warn("Could not find round separator 2→3");
+            // Fallback: find first question of Round 3
+            const r3Index = questions.findIndex(q => q.id.startsWith("R3"));
+            if (r3Index !== -1) {
+                loadQuestion(r3Index);
+            }
         }
-
-        // Navigate to separator. Pass mode=individual so the separator can show context.
-        window.location.href = `round-separator.html?from=2&to=3&startIndex=${r3Index}&mode=individual`;
     }
 }
 
