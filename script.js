@@ -1550,15 +1550,15 @@ function finishRound1() {
         saveRoundState();
         saveTeams();
 
-        // Find first question of Round 2
+        // Find first question of Round 2 (we'll navigate to a separator page first)
         const r2Index = questions.findIndex(q => q.id.startsWith("R2"));
-        if (r2Index !== -1) {
-            loadQuestion(r2Index);
-        } else {
+        if (r2Index === -1) {
             console.warn("Could not find start of Round 2");
         }
 
-        alertUser(`Round 1 complete! Teams eliminated: ${eliminatedNames}. Starting Round 2.`);
+        // Navigate to the round separator page so the host can announce the transition.
+        // The separator will write `quizCurrentIndex` into localStorage and return to `geofun.html`.
+        window.location.href = `round-separator.html?from=1&to=2&startIndex=${r2Index}`;
     }
 }
 
@@ -1597,15 +1597,14 @@ function finishRound2() {
         saveRoundState();
         saveTeams();
 
-        // Find first question of Round 3
+        // Find first question of Round 3 (we'll navigate to a separator page first)
         const r3Index = questions.findIndex(q => q.id.startsWith("R3"));
-        if (r3Index !== -1) {
-            loadQuestion(r3Index);
-        } else {
+        if (r3Index === -1) {
             console.warn("Could not find start of Round 3");
         }
 
-        alertUser(`Round 2 complete! Team eliminated: ${teamToEliminate.name}. Starting Round 3 (Individual Mode).`);
+        // Navigate to separator. Pass mode=individual so the separator can show context.
+        window.location.href = `round-separator.html?from=2&to=3&startIndex=${r3Index}&mode=individual`;
     }
 }
 
