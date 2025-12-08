@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCAV-NET TERMINAL: 24 HR DECOMMISSION</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script type="module">
+        // --- CLIENT-SIDE GLOBAL VARIABLES & API ENDPOINTS ---
+        const API_BASE_URL = "http://localhost:8080/api";
+        const TIME_ENDPOINT = "/time";
+        const DESTRUCT_ENDPOINT = "/destruct";
+        const SUBMIT_LOG_ENDPOINT = "/logs/submit";
+        const PUBLIC_LOGS_ENDPOINT = "/logs/public";
+
+        let userId = null;
+        let countdownInterval;
+        let logPollInterval;
+
+        // --- UI ELEMENTS ---
+        const countdownEl = document.getElementById('countdown');
+        const messageEl = document.getElementById('message');
+        const actionButtonEl = document.getElementById('actionButton');
+        const userIdDisplayEl = document.getElementById('userIdDisplay');
+        const publicLogsContainer = document.getElementById('publicLogs');
+
+        // Initial destruction time, set 24 hours from when the client loads.
+        const INITIAL_REMAINING_SECONDS = 24 * 60 * 60;
+        let destructionTimeClient = new Date().getTime() + INITIAL_REMAINING_SECONDS * 1000;
+
+        /**
+         * Initializes the user ID and starts the main application features.
+         */
+        function initializeApp() {
+            // Generate a persistent local ID for this user session
+            userId = localStorage.getItem('localUserId');
+            if (!userId) {
+                userId = crypto.randomUUID();
+                localStorage.setItem('localUserId', userId);
+            }
+            userIdDisplayEl.textContent = `USER ID: ${userId}`;
+
+            initializeCountdown();
+            startLogPolling();
+        }
+
+
+        // --- LOGIC FOR SAVING LOGS (via Go API) ---
+        async function saveLog() {
+            const logText = document.getElementById('logText').value.trim();
+            const isPublic = document.getElementById('isPublic').checked;
+
+            if (!logText) {
+                alertUser('Log content is required.');
+                return;
+            }
+
+            const logEntry = {
+                text: logText,
+                authorId: userId,
+                isPublic: isPublic,
+            };
+
+            try {
+                const response = await fetch(API_BASE_URL + SUBMIT_LOG_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(logEntry)
+                });
+
+                if (response.ok) {
+                    document.getElementById('logText').value = '';
+                    document.getElementById('isPublic').checked = false;
+                    alertUser(`Log transmitted! Visibility: ${isPublic ? 'PUBLIC BROADCAST' : 'PRIVATE CACHE'}.`, isPublic ? 'green' : 'yellow');
+                    // Refresh public logs immediately if a public log was sent
+                    if (isPublic) {
+                        fetchPublicLogs();
+                    }
+                } else {
+                    const errorData = await response.json();
+                    alertUser(`TRANSMISSION FAILED: ${errorData.message || 'Server Error'}.`, 'red');
+                }
+
+            } catch (e) {
+                console.error("Error transmitting log: ", e);
+                alertUser("ERROR: API UNREACHABLE (localhost:8080). Data lost to the void.", 'red');
+            }
+        }
+
+        // --- LOGIC FOR DISPLAYING PUBLIC LOGS (via Go API polling) ---
+        async function fetchPublicLogs() {
+            try {
+                const response = await fetch(API_BASE_URL + PUBLIC_LOGS_ENDPOINT);
+                if (!response.ok) throw new Error("API failed to return logs.");
+
+                const logs = await response.json();
+
+                publicLogsContainer.innerHTML = '';
+                if (logs.length === 0) {
+                    publicLogsContainer.innerHTML = '<p class="text-xs text-rust-color-soft">No public transmissions found. Start the feed.</p>';
+                    return;
+                }
+
+                logs.forEach((data) => {
+                    // Go server returns timestamp as a string (e.g., "2025-12-08 12:00:00")
+                    const date = new Date(data.timestamp);
+                    const timeString = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                    const dateString = date.toLocaleDateString('en-US');
+
+                    // Create log element
+                    const logItem = document.createElement('div');
+                    logItem.className = 'p-2 border-b border-soft-red last:border-b-0';
+                    logItem.innerHTML = `
+                        <p class="text-xs text-rust-color-soft mb-1">
+                            LOG ID: ${String(data.authorId).substring(0, 8)} | TIME: ${dateString} ${timeString}
+                        </p>
+                        <p class="text-sm text-theme-color break-words">${data.text}</p>
+                    `;
+                    publicLogsContainer.appendChild(logItem);
+                });
+
+            } catch (error) {
+                console.error("Error loading public logs:", error);
+                publicLogsContainer.innerHTML = '<p class="text-xs text-soft-red">Error loading logs. API Unreachable.</p>';
+            }
+        }
+
+        function startLogPolling() {
+            // Clear existing interval
+            if (logPollInterval) clearInterval(logPollInterval);
+
+            // Poll the server every 5 seconds for new public logs
+            fetchPublicLogs();
+            logPollInterval = setInterval(fetchPublicLogs, 5000);
+        }
+
+        // --- COUNTDOWN LOGIC (API calls adjusted to new endpoints) ---
+
+        async function fetchTime() {
+            try {
+                const response = await fetch(API_BASE_URL + TIME_ENDPOINT);
+                if (!response.ok) throw new Error("Server responded with error.");
+
+                const data = await response.json();
+
+                const remainingSeconds = data.remainingSeconds;
+                destructionTimeClient = new Date().getTime() + remainingSeconds * 1000;
+                messageEl.innerHTML = `<p class="text-xs text-soft-green">STATUS: INITIATED. DO NOT INTERFERE. (TIME SERVER: ONLINE)</p>`;
+                return remainingSeconds;
+
+            } catch (error) {
+                const remaining = destructionTimeClient - new Date().getTime();
+                messageEl.innerHTML = `<p class="text-xs text-soft-yellow">WARNING: BACKEND API OFFLINE (localhost:8080). FALLING BACK TO LOCAL TIME ESTIMATE.</p>`;
+
+                if (remaining <= 0) return 0;
+                return remaining / 1000;
+            }
+        }
+
+        function formatTime(totalSeconds) {
+            const seconds = Math.floor(totalSeconds % 60);
+            const minutes = Math.floor((totalSeconds / 60) % 60);
+            const hours = Math.floor((totalSeconds / (60 * 60)) % 24);
+            const days = Math.floor(totalSeconds / (60 * 60 * 24));
+
+            const pad = (num) => String(num).padStart(2, '0');
+
+            return `${pad(days)}:${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+        }
+
+        async function updateCountdown() {
+            let totalSecondsRemaining = await fetchTime();
+
+            if (totalSecondsRemaining <= 0) {
+                clearInterval(countdownInterval);
+                totalSecondsRemaining = 0;
+                countdownEl.innerHTML = `00:00:00:00`;
+                triggerDestruction();
+                return;
+            }
+
+            countdownEl.innerHTML = formatTime(totalSecondsRemaining);
+
+            if (totalSecondsRemaining < 3600) {
+                // Last hour: Flash red
+                countdownEl.style.color = 'var(--soft-red)';
+                countdownEl.style.textShadow = '0 0 10px var(--soft-red), 0 0 20px var(--soft-red)';
+            } else {
+                // Normal state: Soft green
+                countdownEl.style.color = 'var(--soft-green)';
+                countdownEl.style.textShadow = 'var(--glitch-shadow)';
+            }
+        }
+
+        function triggerDestruction() {
+            messageEl.innerHTML = `
+                <p class="text-xl text-soft-red glitch-text">!!! DECOMMISSION COMPLETE !!!</p>
+                <p class="text-sm text-theme-color">SYSTEM OFFLINE. DATA PURGE 100%. ACCESS TERMINATED.</p>
+                <p class="text-xs mt-2">-- WASTE PUNK PROTOCOL 404 --</p>
+            `;
+            actionButtonEl.textContent = 'REBOOT SYSTEM (RESTART COUNTDOWN)';
+            actionButtonEl.onclick = initializeCountdown;
+            document.body.style.backgroundColor = 'var(--theme-color)';
+            countdownEl.classList.remove('glitch-text');
+            countdownEl.style.color = '#ccc';
+        }
+
+        async function attemptOverride() {
+            actionButtonEl.disabled = true;
+            actionButtonEl.textContent = 'OVERRIDE IN PROGRESS...';
+
+            try {
+                const response = await fetch(API_BASE_URL + DESTRUCT_ENDPOINT, { method: 'POST' });
+                if (response.ok) {
+                    messageEl.innerHTML = `<p class="text-lg text-soft-green">[[ OVERRIDE SUCCESSFUL ]]</p><p class="text-sm">CLOCK RESET BY SERVER. NEW CYCLE INITIATED.</p>`;
+                } else {
+                    messageEl.innerHTML = `<p class="text-lg text-soft-red">[[ OVERRIDE FAILED ]]</p><p class="text-sm">ERROR: SERVER REFUSED PROTOCOL.</p>`;
+                }
+            } catch (error) {
+                messageEl.innerHTML = `<p class="text-lg text-soft-red">[[ OVERRIDE FAILED ]]</p><p class="text-sm">ERROR: API UNREACHABLE. ATTEMPTING LOCAL RESTART.</p>`;
+            } finally {
+                actionButtonEl.disabled = false;
+                actionButtonEl.textContent = 'ATTEMPT SYSTEM OVERRIDE (DANGEROUS)';
+                initializeCountdown();
+            }
+        }
+
+        function initializeCountdown() {
+            if (countdownInterval) clearInterval(countdownInterval);
+
+            destructionTimeClient = new Date().getTime() + INITIAL_REMAINING_SECONDS * 1000;
+
+            messageEl.innerHTML = `<p class="text-xs text-soft-green">STATUS: INITIATED. DO NOT INTERFERE. (TIME SERVER: CHECKING...)</p>`;
+            actionButtonEl.onclick = attemptOverride;
+            document.body.style.backgroundColor = 'var(--bg-color)';
+            countdownEl.classList.add('glitch-text');
+            countdownEl.style.textShadow = 'var(--glitch-shadow)';
+
+            updateCountdown();
+            countdownInterval = setInterval(updateCountdown, 1000);
+        }
+
+        // --- CUSTOM ALERT FUNCTION (Replacing alert()) ---
+        function alertUser(message, color = 'red') {
+            const alertBox = document.getElementById('logAlert');
+            alertBox.textContent = `[MESSAGE]: ${message}`;
+
+            let colorClass = 'text-soft-red';
+            if (color === 'yellow') colorClass = 'text-soft-yellow';
+            if (color === 'green') colorClass = 'text-soft-green';
+
+            alertBox.className = `message-box mt-4 ${colorClass}`;
+
+            // Clear message after 5 seconds
+            setTimeout(() => {
+                alertBox.textContent = 'SYSTEM LOG STATUS: READY.';
+                alertBox.className = 'message-box mt-4 text-rust-color-soft';
+            }, 5000);
+        }
+
+        // Expose functions to global scope for HTML element calls
+        window.saveLog = saveLog;
+
+        window.onload = initializeApp;
+
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
+        :root {
+            /* Light/Cozy Theme Colors - Inverted for Cream background */
+            --bg-color: #fff8e7;
+            /* Cream/White for Main Background */
+            --theme-color: #1a1a1a;
+            /* Near Black for Main Text/Borders */
+            --rust-color-soft: #a0522d;
+            /* Darker brown for accents */
+            --soft-green: #4a6825;
+            /* Darker, mossy green for secondary emphasis */
+            --soft-red: #a30000;
+            /* Deep red for warnings */
+            --soft-yellow: #e4c45b;
+            /* Muted yellow/gold */
+
+            /* Glitch effect uses soft green on the light background */
+            --glitch-shadow: 0 0 5px var(--soft-green), 0 0 10px var(--soft-green);
+        }
+
+        body {
+            font-family: 'Space Mono', monospace;
+            background-color: var(--bg-color);
+            color: var(--theme-color);
+            /* Subtle texture on light background */
+            background-image:
+                repeating-linear-gradient(90deg, transparent, transparent 1px, rgba(0, 0, 0, 0.05) 1px, rgba(0, 0, 0, 0.05) 2px),
+                repeating-linear-gradient(0deg, #F9F0E1, #F9F0E1 1px, var(--bg-color) 1px, var(--bg-color) 2px);
+            background-size: 4px 4px;
+            min-height: 100vh;
+        }
+
+        .waste-punk-box {
+            /* PC screen width adjustment */
+            max-width: 90%;
+            width: 100%;
+
+            @media (min-width: 1024px) {
+                max-width: 48rem;
+            }
+
+            /* Dark border/shadows on light card */
+            border: 4px solid var(--theme-color);
+            box-shadow: 0 0 0 8px #ccc,
+            /* Simulated salvaged frame - light gray */
+            0 0 0 10px var(--theme-color),
+            0 0 0 12px #aaa;
+            padding: 2rem;
+            background-color: rgba(255, 255, 255, 0.95);
+            margin: 2rem auto;
+        }
+
+        .countdown-display {
+            font-size: clamp(2rem, 10vw, 6rem);
+            line-height: 1;
+            color: var(--soft-green);
+            text-shadow: var(--glitch-shadow);
+            transition: color 0.1s ease-in-out;
+            font-weight: 700;
+        }
+
+        .label {
+            color: var(--rust-color-soft);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+        }
+
+        /* Glitch Animation - uses soft-green shadow */
+        @keyframes flicker {
+
+            0%,
+            18%,
+            22%,
+            25%,
+            53%,
+            57%,
+            100% {
+                text-shadow: var(--glitch-shadow);
+                opacity: 1;
+            }
+
+            20%,
+            24%,
+            55% {
+                text-shadow: none;
+                opacity: 0.8;
+            }
+        }
+
+        .glitch-text {
+            animation: flicker 4s infinite alternate;
+        }
+
+        /* Broken Button Style - Dark text on light background */
+        .broken-button {
+            background-color: var(--rust-color-soft);
+            border: 2px solid var(--soft-red);
+            color: var(--bg-color);
+            /* Light text on dark button */
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: all 0.1s;
+            box-shadow: 4px 4px 0 #444;
+        }
+
+        .broken-button:hover {
+            background-color: var(--soft-red);
+            color: var(--bg-color);
+            box-shadow: 2px 2px 0 #111;
+        }
+
+        .broken-button:active {
+            box-shadow: 0 0 0 transparent;
+            transform: translate(4px, 4px);
+        }
+
+        .message-box {
+            /* Dark text on light box */
+            border: 2px dashed var(--soft-green);
+            background-color: rgba(240, 240, 240, 0.9);
+            color: var(--theme-color);
+            padding: 1rem;
+            white-space: pre-wrap;
+            font-size: 0.9rem;
+        }
+
+        /* Utility Colors using the dark theme variables */
+        .text-soft-red {
+            color: var(--soft-red);
+        }
+
+        .text-soft-green {
+            color: var(--soft-green);
+        }
+
+        .text-soft-yellow {
+            color: var(--soft-yellow);
+        }
+
+        .text-rust-color-soft {
+            color: var(--rust-color-soft);
+        }
+
+        .border-soft-red {
+            border-color: var(--soft-red);
+        }
+
+        /* Custom styles for log input */
+        #logText {
+            /* Dark text on very light background */
+            color: var(--theme-color);
+            background-color: rgba(240, 240, 240, 0.9);
+            box-shadow: inset 0 0 5px rgba(163, 0, 0, 0.5);
+            border: 2px solid var(--theme-color);
+        }
+
+        #logText::placeholder {
+            color: #777;
+            /* Dark placeholder text */
+        }
+
+        /* Log display container */
+        #publicLogs {
+            color: var(--theme-color);
+            background-color: #f0f0f0;
+            /* Slightly off-white for contrast with main background */
+        }
+
+        /* Checkbox styling */
+        input[type="checkbox"] {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            cursor: pointer;
+        }
+
+        input[type="checkbox"]:checked {
+            background-color: var(--soft-green);
+            border-color: var(--soft-green);
+        }
+
+        input[type="checkbox"]:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(74, 104, 37, 0.5);
+        }
+    </style>
+</head>
+
+<body class="p-4 flex items-center justify-center">
+
+    <div id="app" class="waste-punk-box text-center">
+        <!-- Header -->
+        <h1 class="text-xl md:text-2xl text-soft-red mb-6 border-b-2 border-soft-red pb-2">
+            <span class="glitch-text">SCAV-NET TERMINAL: 24 HR DECOMMISSION</span>
+        </h1>
+
+        <!-- User ID Display -->
+        <p id="userIdDisplay" class="text-xs text-rust-color-soft mb-4 break-all">USER ID: INITIALIZING...</p>
+
+        <!-- Countdown Display -->
+        <div class="mb-8">
+            <div id="countdown" class="countdown-display glitch-text">--:--:--:--</div>
+            <div class="flex justify-around mt-2 text-sm md:text-base">
+                <span class="label">Days</span>
+                <span class="label">Hours</span>
+                <span class="label">Minutes</span>
+                <span class="label">Seconds</span>
+            </div>
+        </div>
+
+        <!-- Status Message Box (Time API Status) -->
+        <div id="message" class="message-box text-left mb-6">
+            <p class="text-xs text-soft-green">STATUS: CHECKING SYSTEM INTEGRITY...</p>
+        </div>
+
+        <!-- Action Button (Override) -->
+        <button id="actionButton" class="broken-button w-full py-3 rounded-none">
+            ATTEMPT SYSTEM OVERRIDE (DANGEROUS)
+        </button>
+
+        <!-- System Log Section -->
+        <div class="mt-8 border-t-2 border-soft-red pt-6">
+            <h2 class="text-xl text-soft-red mb-4 border-b border-soft-red pb-1">
+                <span class="glitch-text">SURVIVOR LOG ENTRY</span>
+            </h2>
+
+            <textarea id="logText" class="w-full h-32 p-3 border focus:outline-none focus:border-soft-green resize-none"
+                placeholder="Record your day, survivor, before the purge..."></textarea>
+
+            <div class="flex items-center justify-between mt-3 mb-4">
+                <label for="isPublic" class="label flex items-center cursor-pointer">
+                    <input type="checkbox" id="isPublic" class="h-4 w-4 rounded-none focus:ring-0 mr-2">
+                    TRANSMIT: PUBLIC BROADCAST
+                </label>
+                <button id="transmitLogButton" onclick="window.saveLog()" class="broken-button px-4 py-2 text-sm">
+                    TRANSMIT LOG
+                </button>
+            </div>
+
+            <div id="logAlert" class="message-box mt-4 text-rust-color-soft">SYSTEM LOG STATUS: READY.</div>
+
+            <!-- Display Public Logs -->
+            <h3 class="text-lg text-rust-color-soft mt-6 mb-2">PUBLIC CACHE (LATEST TRANSMISSIONS)</h3>
+            <div id="publicLogs" class="space-y-3 max-h-60 overflow-y-auto p-2 border border-soft-red">
+                <p class="text-xs text-rust-color-soft">Awaiting public transmissions...</p>
+            </div>
+        </div>
+
+    </div>
+</body>
+
+</html>
