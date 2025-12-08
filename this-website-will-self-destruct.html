@@ -8,16 +8,30 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <script type="module">
-        // --- CLIENT-SIDE GLOBAL VARIABLES & API ENDPOINTS ---
-        const API_BASE_URL = "http://localhost:8080/api";
-        const TIME_ENDPOINT = "/time";
-        const DESTRUCT_ENDPOINT = "/destruct";
-        const SUBMIT_LOG_ENDPOINT = "/logs/submit";
-        const PUBLIC_LOGS_ENDPOINT = "/logs/public";
+        // --- FIREBASE IMPORTS ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, addDoc, onSnapshot, collection, query, limit, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+        // --- GLOBAL VARIABLES & FIREBASE SETUP ---
         let userId = null;
+        let db = null;
+        let auth = null;
         let countdownInterval;
-        let logPollInterval;
+        let logUnsubscribe; // Firestore listener unsubscribe function
+        let isAuthReady = false;
+
+        // Use global variables provided by the Canvas environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // Firestore paths
+        const PUBLIC_LOGS_COLLECTION = `artifacts/${appId}/public/data/logs`;
+
+        // Initial destruction time (purely client-side)
+        const INITIAL_REMAINING_SECONDS = 24 * 60 * 60;
+        let destructionTimeClient = new Date().getTime() + INITIAL_REMAINING_SECONDS * 1000;
 
         // --- UI ELEMENTS ---
         const countdownEl = document.getElementById('countdown');
@@ -26,29 +40,56 @@
         const userIdDisplayEl = document.getElementById('userIdDisplay');
         const publicLogsContainer = document.getElementById('publicLogs');
 
-        // Initial destruction time, set 24 hours from when the client loads.
-        const INITIAL_REMAINING_SECONDS = 24 * 60 * 60;
-        let destructionTimeClient = new Date().getTime() + INITIAL_REMAINING_SECONDS * 1000;
 
         /**
-         * Initializes the user ID and starts the main application features.
+         * Initializes Firebase, performs authentication, and sets up state.
          */
-        function initializeApp() {
-            // Generate a persistent local ID for this user session
-            userId = localStorage.getItem('localUserId');
-            if (!userId) {
-                userId = crypto.randomUUID();
-                localStorage.setItem('localUserId', userId);
+        async function initializeApp() {
+            if (!firebaseConfig) {
+                console.error("Firebase config is missing.");
+                alertUser("SYSTEM ERROR: Database configuration missing. Logs cannot be saved.", 'red');
+                return;
             }
-            userIdDisplayEl.textContent = `USER ID: ${userId}`;
 
-            initializeCountdown();
-            startLogPolling();
+            const app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+
+            // 1. Handle Authentication
+            if (initialAuthToken) {
+                await signInWithCustomToken(auth, initialAuthToken).catch(e => {
+                    console.error("Custom sign-in failed:", e);
+                    return signInAnonymously(auth);
+                });
+            } else {
+                await signInAnonymously(auth);
+            }
+
+            // 2. Set up Auth State Listener
+            onAuthStateChanged(auth, (user) => {
+                isAuthReady = true;
+                if (user) {
+                    userId = user.uid;
+                } else {
+                    // Fallback for unauthenticated state if needed, but should be covered by anonymous sign-in
+                    userId = crypto.randomUUID();
+                }
+                userIdDisplayEl.textContent = `USER ID: ${userId}`;
+
+                // 3. Start App functions only after auth is ready
+                initializeCountdown();
+                startLogListener();
+            });
         }
 
 
-        // --- LOGIC FOR SAVING LOGS (via Go API) ---
+        // --- LOGIC FOR SAVING LOGS (via Firestore) ---
         async function saveLog() {
+            if (!db || !userId || !isAuthReady) {
+                alertUser("LOG FAILED: System initialization incomplete.", 'red');
+                return;
+            }
+
             const logText = document.getElementById('logText').value.trim();
             const isPublic = document.getElementById('isPublic').checked;
 
@@ -61,50 +102,57 @@
                 text: logText,
                 authorId: userId,
                 isPublic: isPublic,
+                timestamp: Date.now()
             };
 
             try {
-                const response = await fetch(API_BASE_URL + SUBMIT_LOG_ENDPOINT, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(logEntry)
-                });
-
-                if (response.ok) {
-                    document.getElementById('logText').value = '';
-                    document.getElementById('isPublic').checked = false;
-                    alertUser(`Log transmitted! Visibility: ${isPublic ? 'PUBLIC BROADCAST' : 'PRIVATE CACHE'}.`, isPublic ? 'green' : 'yellow');
-                    // Refresh public logs immediately if a public log was sent
-                    if (isPublic) {
-                        fetchPublicLogs();
-                    }
+                // Public logs are saved to a general collection
+                if (isPublic) {
+                    await addDoc(collection(db, PUBLIC_LOGS_COLLECTION), logEntry);
                 } else {
-                    const errorData = await response.json();
-                    alertUser(`TRANSMISSION FAILED: ${errorData.message || 'Server Error'}.`, 'red');
+                    // Private logs stored under user's specific path
+                    const privateCollectionPath = `artifacts/${appId}/users/${userId}/private_logs`;
+                    await addDoc(collection(db, privateCollectionPath), logEntry);
                 }
 
+                document.getElementById('logText').value = '';
+                document.getElementById('isPublic').checked = false;
+                alertUser(`Log transmitted! Visibility: ${isPublic ? 'PUBLIC BROADCAST' : 'PRIVATE CACHE'}.`, isPublic ? 'green' : 'yellow');
+
             } catch (e) {
-                console.error("Error transmitting log: ", e);
-                alertUser("ERROR: API UNREACHABLE (localhost:8080). Data lost to the void.", 'red');
+                console.error("Error saving log to Firestore: ", e);
+                alertUser("ERROR: Data transmission failed. Check connection.", 'red');
             }
         }
 
-        // --- LOGIC FOR DISPLAYING PUBLIC LOGS (via Go API polling) ---
-        async function fetchPublicLogs() {
-            try {
-                const response = await fetch(API_BASE_URL + PUBLIC_LOGS_ENDPOINT);
-                if (!response.ok) throw new Error("API failed to return logs.");
+        // --- LOGIC FOR DISPLAYING PUBLIC LOGS (via Firestore Listener) ---
+        function startLogListener() {
+            if (!db || !isAuthReady || !userId) return;
 
-                const logs = await response.json();
+            // Clear existing listener if one exists
+            if (logUnsubscribe) logUnsubscribe();
 
+            // Query: latest 5 logs, ordered by timestamp
+            const logQuery = query(
+                collection(db, PUBLIC_LOGS_COLLECTION),
+                orderBy('timestamp', 'desc'),
+                limit(5)
+            );
+
+            logUnsubscribe = onSnapshot(logQuery, (snapshot) => {
                 publicLogsContainer.innerHTML = '';
+                const logs = [];
+
+                snapshot.forEach(doc => {
+                    logs.push(doc.data());
+                });
+
                 if (logs.length === 0) {
-                    publicLogsContainer.innerHTML = '<p class="text-xs text-rust-color-soft">No public transmissions found. Start the feed.</p>';
+                    publicLogsContainer.innerHTML = '<p class="text-xs text-rust-color-soft p-2">No public transmissions found. Start the feed.</p>';
                     return;
                 }
 
                 logs.forEach((data) => {
-                    // Go server returns timestamp as a string (e.g., "2025-12-08 12:00:00")
                     const date = new Date(data.timestamp);
                     const timeString = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
                     const dateString = date.toLocaleDateString('en-US');
@@ -120,44 +168,13 @@
                     `;
                     publicLogsContainer.appendChild(logItem);
                 });
-
-            } catch (error) {
-                console.error("Error loading public logs:", error);
-                publicLogsContainer.innerHTML = '<p class="text-xs text-soft-red">Error loading logs. API Unreachable.</p>';
-            }
+            }, (error) => {
+                console.error("Firestore Listener Error:", error);
+                publicLogsContainer.innerHTML = '<p class="text-xs text-soft-red p-2">Error listening to logs. Data feed interrupted.</p>';
+            });
         }
 
-        function startLogPolling() {
-            // Clear existing interval
-            if (logPollInterval) clearInterval(logPollInterval);
-
-            // Poll the server every 5 seconds for new public logs
-            fetchPublicLogs();
-            logPollInterval = setInterval(fetchPublicLogs, 5000);
-        }
-
-        // --- COUNTDOWN LOGIC (API calls adjusted to new endpoints) ---
-
-        async function fetchTime() {
-            try {
-                const response = await fetch(API_BASE_URL + TIME_ENDPOINT);
-                if (!response.ok) throw new Error("Server responded with error.");
-
-                const data = await response.json();
-
-                const remainingSeconds = data.remainingSeconds;
-                destructionTimeClient = new Date().getTime() + remainingSeconds * 1000;
-                messageEl.innerHTML = `<p class="text-xs text-soft-green">STATUS: INITIATED. DO NOT INTERFERE. (TIME SERVER: ONLINE)</p>`;
-                return remainingSeconds;
-
-            } catch (error) {
-                const remaining = destructionTimeClient - new Date().getTime();
-                messageEl.innerHTML = `<p class="text-xs text-soft-yellow">WARNING: BACKEND API OFFLINE (localhost:8080). FALLING BACK TO LOCAL TIME ESTIMATE.</p>`;
-
-                if (remaining <= 0) return 0;
-                return remaining / 1000;
-            }
-        }
+        // --- COUNTDOWN LOGIC (Purely Client-Side) ---
 
         function formatTime(totalSeconds) {
             const seconds = Math.floor(totalSeconds % 60);
@@ -170,8 +187,9 @@
             return `${pad(days)}:${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
         }
 
-        async function updateCountdown() {
-            let totalSecondsRemaining = await fetchTime();
+        function updateCountdown() {
+            const now = new Date().getTime();
+            let totalSecondsRemaining = Math.max(0, (destructionTimeClient - now) / 1000);
 
             if (totalSecondsRemaining <= 0) {
                 clearInterval(countdownInterval);
@@ -207,32 +225,30 @@
             countdownEl.style.color = '#ccc';
         }
 
-        async function attemptOverride() {
+        // Override now only resets the local timer
+        function attemptOverride() {
             actionButtonEl.disabled = true;
-            actionButtonEl.textContent = 'OVERRIDE IN PROGRESS...';
+            actionButtonEl.textContent = 'OVERRIDE INITIATED...';
 
-            try {
-                const response = await fetch(API_BASE_URL + DESTRUCT_ENDPOINT, { method: 'POST' });
-                if (response.ok) {
-                    messageEl.innerHTML = `<p class="text-lg text-soft-green">[[ OVERRIDE SUCCESSFUL ]]</p><p class="text-sm">CLOCK RESET BY SERVER. NEW CYCLE INITIATED.</p>`;
-                } else {
-                    messageEl.innerHTML = `<p class="text-lg text-soft-red">[[ OVERRIDE FAILED ]]</p><p class="text-sm">ERROR: SERVER REFUSED PROTOCOL.</p>`;
-                }
-            } catch (error) {
-                messageEl.innerHTML = `<p class="text-lg text-soft-red">[[ OVERRIDE FAILED ]]</p><p class="text-sm">ERROR: API UNREACHABLE. ATTEMPTING LOCAL RESTART.</p>`;
-            } finally {
-                actionButtonEl.disabled = false;
-                actionButtonEl.textContent = 'ATTEMPT SYSTEM OVERRIDE (DANGEROUS)';
-                initializeCountdown();
-            }
+            // Reset local timer
+            destructionTimeClient = new Date().getTime() + INITIAL_REMAINING_SECONDS * 1000;
+            messageEl.innerHTML = `<p class="text-lg text-soft-green">[[ LOCAL OVERRIDE SUCCESSFUL ]]</p><p class="text-sm">CLOCK RESET. NEW CYCLE INITIATED. (TIMER: LOCAL)</p>`;
+
+            actionButtonEl.disabled = false;
+            actionButtonEl.textContent = 'ATTEMPT SYSTEM OVERRIDE (DANGEROUS)';
+            initializeCountdown();
         }
+
 
         function initializeCountdown() {
             if (countdownInterval) clearInterval(countdownInterval);
 
-            destructionTimeClient = new Date().getTime() + INITIAL_REMAINING_SECONDS * 1000;
+            // Set initial time if it hasn't been set yet
+            if (destructionTimeClient < new Date().getTime()) {
+                destructionTimeClient = new Date().getTime() + INITIAL_REMAINING_SECONDS * 1000;
+            }
 
-            messageEl.innerHTML = `<p class="text-xs text-soft-green">STATUS: INITIATED. DO NOT INTERFERE. (TIME SERVER: CHECKING...)</p>`;
+            messageEl.innerHTML = `<p class="text-xs text-soft-green">STATUS: INITIATED. DO NOT INTERFERE. (TIMER: LOCAL)</p>`;
             actionButtonEl.onclick = attemptOverride;
             document.body.style.backgroundColor = 'var(--bg-color)';
             countdownEl.classList.add('glitch-text');
@@ -481,7 +497,7 @@
             </div>
         </div>
 
-        <!-- Status Message Box (Time API Status) -->
+        <!-- Status Message Box (Local Timer Status) -->
         <div id="message" class="message-box text-left mb-6">
             <p class="text-xs text-soft-green">STATUS: CHECKING SYSTEM INTEGRITY...</p>
         </div>
