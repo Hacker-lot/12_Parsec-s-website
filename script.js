@@ -65,19 +65,20 @@ const geographyQuestions = [
         "rationale": "英国的构成国是英格兰，威尔士，苏格兰和北爱尔兰。设得兰是一个群岛的名字。"
     },
     {
-        "id": "R1 必答题 005",
+        "id": "R1 必答题 016",
         "type": "multiple-choice",
-        "text": "以下哪个国家不被赤道穿过？",
+        "text": "根据BBC报道，2025年10月22日尼日利亚的一起油罐车爆炸事故造成了至少42人死亡。下列哪个是尼日利亚的国旗？",
         "options": [
-            "A.阿尔及利亚",
-            "B.厄瓜多尔",
-            "C.印度尼西亚",
-            "D.马尔代夫"
+            "A.<br><img src='images/senegal.png' class='h-24 mt-2 border border-gray-300' alt='Flag A'>",
+            "B.<br><img src='images/benin.png' class='h-24 mt-2 border border-gray-300' alt='Flag B'>",
+            "C.<br><img src='images/nigeria.png' class='h-24 mt-2 border border-gray-300' alt='Flag C'>",
+            "D.<br><img src='images/ethiopia.png' class='h-24 mt-2 border border-gray-300' alt='Flag D'>"
         ],
-        "answer": "A",
+        "answer": "C",
         "points": 1,
-        "rationale": "赤道大致穿过非洲中部，阿尔及利亚位于北非。"
+        "rationale": "图1为塞内加尔国旗，图2是贝宁国旗，图4是埃塞俄比亚国旗"
     },
+
     {
         "id": "R1 必答题 006",
         "type": "multiple-choice",
@@ -219,18 +220,18 @@ const geographyQuestions = [
         "rationale": "罗德岛太阳神铜像曾经矗立在希腊罗得岛上的罗得港港口"
     },
     {
-        "id": "R1 必答题 016",
+        "id": "R1 必答题 005",
         "type": "multiple-choice",
-        "text": "根据BBC报道，2025年10月22日尼日利亚的一起油罐车爆炸事故造成了至少42人死亡。下列哪个是尼日利亚的国旗？",
+        "text": "以下哪个国家不被赤道穿过？",
         "options": [
-            "A.<br><img src='images/senegal.png' class='h-24 mt-2 border border-gray-300' alt='Flag A'>",
-            "B.<br><img src='images/benin.png' class='h-24 mt-2 border border-gray-300' alt='Flag B'>",
-            "C.<br><img src='images/nigeria.png' class='h-24 mt-2 border border-gray-300' alt='Flag C'>",
-            "D.<br><img src='images/ethiopia.png' class='h-24 mt-2 border border-gray-300' alt='Flag D'>"
+            "A.赤道几内亚",
+            "B.加蓬",
+            "C.乌干达",
+            "D.马尔代夫"
         ],
-        "answer": "C",
+        "answer": "A",
         "points": 5,
-        "rationale": "图1为塞内加尔国旗，图2是贝宁国旗，图4是埃塞俄比亚国旗"
+        "rationale": "赤道大致穿过非洲中部，阿尔及利亚位于北非。"
     },
     {
         "id": "R1 必答题 017",
@@ -603,83 +604,83 @@ const geographyQuestions = [
         "rationale": ""
     },
     {
-        "id": "R3 加赛抢答题 055",
+        "id": "R3 图片线索题 055",
         "type": "image-clue",
-        "text": "这个国家根据语言被分为两个历史性区域——佛兰德斯和瓦隆尼亚。1885-1908年间，该国时任国王利奥波德二世对现在的刚过民主共和国实行了残暴的殖民统治。图中展示的是这个国家的著名地标原子塔，展示了放大1650亿倍的铁晶体晶胞构架。作为低地三国之一，这个国家的第二大城市是港口安特卫普。终极提示：请说出这个欧洲国家的名字——它的首都是布鲁塞尔，也是欧盟总部所在地",
+        "text": "",
         "answer": "比利时",
-        "points": 10,
+        "points": 1,
         "image": "images/iron_balls.png",
         "rationale": "佛兰德斯是比利时的荷兰语区，瓦隆尼亚是法语区。利奥波德二世曾下令虐杀刚果自由邦数百万到1,500万人。"
     },
     {
-        "id": "R3 加赛抢答题 056",
+        "id": "R3 图片线索题 056",
         "type": "image-clue",
-        "text": "在这片海洋上，你可以找到爱德华王子群岛，索科特拉岛和安达曼-尼科巴群岛。图中所示的是位于这片海洋的世界最长海峡。在这片海洋的沿岸你可以找到蒙巴萨，马斯喀特和科伦坡等城市。此外，雅鲁藏布江最终注入了这片海洋。终极提示：马达加斯加岛和旅游胜地马尔代夫位于这片与一个国家同名的世界第三大洋上。它的名字是",
+        "text": "",
         "answer": "印度洋",
-        "points": 10,
+        "points": 1,
         "image": "images/indian_ocean.png",
-        "rationale": "爱德华王子群岛属于南非，索科特拉岛是也门的岛屿，以龙血树闻名。安达曼-尼科巴群岛属于印度。世界上最长的海峡是莫桑比克海峡。蒙巴萨是肯尼亚的港口城市，马斯喀特和科伦坡分别是阿曼和斯里兰卡的首都。雅鲁藏布江在孟加拉国注入印度洋。"
+        "rationale": ""
     },
     {
-        "id": "R3 加赛抢答题 057",
+        "id": "R3 图片线索题 057",
         "type": "image-clue",
-        "text": "在这条河的沿岸，你可以找到战神广场和特洛卡得罗花园。这条河流源自朗格勒高原，几经流转后注入科唐坦半岛北部海域。位于这条河流所在国家首都的卡鲁赛尔桥和耶拿桥飞渡这条河。它不是这个西欧国家最长的河流，却或许是最有名的一条。终极提示：这条河的河畔坐落着协和广场和奥赛博物馆，在游船上你可以观赏荣军院的穹顶和埃菲尔铁塔的壮丽景色",
+        "text": "",
         "answer": "塞纳河",
-        "points": 10,
+        "points": 1,
         "image": "images/seine_river.png",
         "rationale": "特洛卡得罗花园是观赏埃菲尔铁塔景色的绝佳之处，这里曾经是夏宫（特洛卡得罗宫）所在之处，现在主要是博物馆，科唐坦半岛北部海域即英吉利海峡。"
     },
     {
-        "id": "R3 加赛抢答题 058",
+        "id": "R3 图片线索题 058",
         "type": "image-clue",
-        "text": "这片区域的最高峰是文森山，海拔4892米。位于该地区的沃斯托克湖也是该地区最大的地下水体。图中所示的是罗斯属地（Ross Dependency）的旗帜，是新西兰在此区域声称拥有的领地。不少其他国家也宣称在这片区域拥有领土主权，例如法国的阿黛利海岸（Adelie Land）和挪威的毛德皇后地(Queen Maud Land)。这片区域的南设得兰群岛与北面的火地岛（Tierra del Fuego）隔海相望。终极提示：1911年，罗阿尔·阿蒙森与罗伯特·法尔肯·斯科特在这片区域展开“竞争”。前者获胜，而后者在此次事件中不幸遇难。这则故事被撰写成了茨威格的文章《伟大的悲剧》。",
+        "text": "",
         "answer": "南极洲",
-        "points": 10,
+        "points": 1,
         "image": "images/ross_dependency.png",
         "rationale": ""
     },
     {
-        "id": "R3 加赛抢答题 059",
+        "id": "R3 图片线索题 059",
         "type": "image-clue",
-        "text": "这座城市最早的欧洲定居者是威廉·布莱克顿，而约翰·温斯罗普则是这座城市殖民时期的第一任总督。这座城市在19世纪初开始不断填海造地以扩张面积，并在1845年时已经增加了约300英亩的土地面积。图中所示的是这座城市的雕塑“Make Way for Ducklings”。这座城市的“自由之路”从城市公园一直到查尔斯顿的邦克山纪念碑，是美国独立战争的重要标志和历史遗址。终极提示：在查尔斯河畔，你可以看到麻省理工学院的穹顶，而这座城市最为出名的莫过于1773年的“倾茶事件”。",
+        "text": "",
         "answer": "波士顿",
-        "points": 10,
+        "points": 1,
         "image": "images/boston.jpg",
         "rationale": "波士顿最初只是一个半岛，如今的重要区域，如后湾（Back Bay），南端（South End），和洛根国际机场都是建立在填海造地的基础之上。“Make Way for Ducklings”是对罗伯特·麥克克洛茨基的同名儿童故事的现实再现。邦克山战役发生在1775年的波士顿。"
     },
     {
-        "id": "R3 加赛抢答题 060",
+        "id": "R3 图片线索题 060",
         "type": "image-clue",
-        "text": "这个国家在1879-1883年的硝石战争中战败，丧失了海岸线，从此跻身内陆国的行列。这个国家的行政首都因为其超高的海拔导致的高原反应和缺氧而被冠以“外交官的坟墓”之名。图中所示的是该国行政首都的卫星城埃尔阿尔托，平均海拔4150米。这个国家的的的喀喀湖是世界上最高的大型可通航淡水湖。终极提示：这个国家是南美洲唯二的内陆国之一，它的行政首都是拉巴斯，而它的货币是玻利维亚诺。",
+        "text": "",
         "answer": "玻利维亚",
-        "points": 10,
+        "points": 1,
         "image": "images/bolivia.png",
         "rationale": "硝石战争，又称鸟粪战争和南美太平洋战争"
     },
     {
-        "id": "R3 加赛抢答题 061",
+        "id": "R3 图片线索题 061",
         "type": "image-clue",
-        "text": "这片区域是东卡国家公园所在之处，该国家公园北接东萨彦岭，南抵哈马尔达班山脉。图中所示的是位于该区域的城镇米尔纳，其拥有世界上最大的挖掘洞之一——米尔矿场。1908年，一颗陨石在克拉斯诺亚尔斯克边疆区上空“空爆”，这就是著名的通古斯大爆炸。同时，位于这片区域的萨哈共和国也是世界上面积最大的一级行政单位。终极提示：鄂毕河和叶尼塞河流经这片西起乌拉尔山脉，东至太平洋的广大区域，它的名字是？",
+        "text": "",
         "answer": "西伯利亚",
-        "points": 10,
+        "points": 1,
         "image": "images/siberia.png",
         "rationale": ""
     },
     {
-        "id": "R3 加赛抢答题 062",
+        "id": "R3 图片线索题 062",
         "type": "image-clue",
-        "text": "这个国家首都的查尔斯桥在神圣罗马帝国皇帝查理4世的主持下始建于1357年，桥的两畔共有30坐雕塑，包括“圣殇”，施洗约翰雕像以及“圣西里尔和美多德像”。图中所示的是该国国徽，其中左下角的黑鹰代表了西里西亚。1938年，该国的切申地区被入侵并占领，而在更早的1618年，在该国首都城堡发生的第二次掷出窗外事件成为了三十年战争的导火索。终极提示：这个国家被历史性的划分为西里西亚，摩拉维亚和波西米亚三个地区，上文提到的入侵切申的是波兰，而该国首都是伏尔塔瓦河畔的布拉格。",
+        "text": "",
         "answer": "捷克共和国",
-        "points": 10,
+        "points": 1,
         "image": "images/czech.png",
         "rationale": ""
     },
     {
-        "id": "R3 加赛抢答题 063",
+        "id": "R3 图片线索题 063",
         "type": "image-clue",
-        "text": "这片海峡的迷雾中至今流传着1940年代荷兰商船棉兰号的诡异传说。这片海峡右岸盘踞着蒂迪旺沙山脉，南端有廖内群岛，而图中所示的是这片海峡沿岸的历史建筑荷兰红堡，位于和这个海峡同名的一座城市。作为海上丝绸之路的重要一环，这片海峡是全球最繁忙的海峡之一。终极提示：位于中南半岛的西南方，这片海峡夹于马来西亚，印度尼西亚和新加坡之间。",
+        "text": "",
         "answer": "马六甲海峡",
-        "points": 10,
+        "points": 1,
         "image": "images/malaica_strait.png",
         "rationale": "棉兰号Ourang Medan是一个幽灵船都市传说，蒂迪旺沙山脉是马来半岛的主要山脉。廖内群岛（Riau Islands）是印尼苏门答腊岛以东的一片群岛，荷兰红堡（Stadthuys）由荷兰人于1650年建造，位于马来西亚马六甲（Melaka）市。"
     }
@@ -1486,7 +1487,7 @@ function generateIndividualRoster() {
 
     // Use the hardcoded default individuals
     const defaultIndividuals = getDefaultIndividuals();
-    
+
     // Filter by active teams (not eliminated)
     const activeTeamIds = new Set(teams.filter(t => !roundState.eliminatedTeamIds.includes(t.id)).map(t => t.id));
     individuals = defaultIndividuals.filter(ind => activeTeamIds.has(ind.teamId));
