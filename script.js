@@ -604,7 +604,7 @@ const geographyQuestions = [
         "rationale": ""
     },
     {
-        "id": "R3 图片线索题 055",
+        "id": "R4 图片线索题 055",
         "type": "image-clue",
         "text": "",
         "answer": "比利时",
@@ -613,7 +613,7 @@ const geographyQuestions = [
         "rationale": "佛兰德斯是比利时的荷兰语区，瓦隆尼亚是法语区。利奥波德二世曾下令虐杀刚果自由邦数百万到1,500万人。"
     },
     {
-        "id": "R3 图片线索题 056",
+        "id": "R4 图片线索题 056",
         "type": "image-clue",
         "text": "",
         "answer": "印度洋",
@@ -622,7 +622,7 @@ const geographyQuestions = [
         "rationale": ""
     },
     {
-        "id": "R3 图片线索题 057",
+        "id": "R4 图片线索题 057",
         "type": "image-clue",
         "text": "",
         "answer": "塞纳河",
@@ -631,7 +631,7 @@ const geographyQuestions = [
         "rationale": "特洛卡得罗花园是观赏埃菲尔铁塔景色的绝佳之处，这里曾经是夏宫（特洛卡得罗宫）所在之处，现在主要是博物馆，科唐坦半岛北部海域即英吉利海峡。"
     },
     {
-        "id": "R3 图片线索题 058",
+        "id": "R4 图片线索题 058",
         "type": "image-clue",
         "text": "",
         "answer": "南极洲",
@@ -640,7 +640,7 @@ const geographyQuestions = [
         "rationale": ""
     },
     {
-        "id": "R3 图片线索题 059",
+        "id": "R4 图片线索题 059",
         "type": "image-clue",
         "text": "",
         "answer": "波士顿",
@@ -649,7 +649,7 @@ const geographyQuestions = [
         "rationale": "波士顿最初只是一个半岛，如今的重要区域，如后湾（Back Bay），南端（South End），和洛根国际机场都是建立在填海造地的基础之上。“Make Way for Ducklings”是对罗伯特·麥克克洛茨基的同名儿童故事的现实再现。邦克山战役发生在1775年的波士顿。"
     },
     {
-        "id": "R3 图片线索题 060",
+        "id": "R4 图片线索题 060",
         "type": "image-clue",
         "text": "",
         "answer": "玻利维亚",
@@ -658,7 +658,7 @@ const geographyQuestions = [
         "rationale": "硝石战争，又称鸟粪战争和南美太平洋战争"
     },
     {
-        "id": "R3 图片线索题 061",
+        "id": "R4 图片线索题 061",
         "type": "image-clue",
         "text": "",
         "answer": "西伯利亚",
@@ -667,7 +667,7 @@ const geographyQuestions = [
         "rationale": ""
     },
     {
-        "id": "R3 图片线索题 062",
+        "id": "R4 图片线索题 062",
         "type": "image-clue",
         "text": "",
         "answer": "捷克共和国",
@@ -676,7 +676,7 @@ const geographyQuestions = [
         "rationale": ""
     },
     {
-        "id": "R3 图片线索题 063",
+        "id": "R4 图片线索题 063",
         "type": "image-clue",
         "text": "",
         "answer": "马六甲海峡",
@@ -759,6 +759,17 @@ function initializeQuestions() {
                 id: "ROUND-SEPARATOR-2-3",
                 type: "transition",
                 text: "第二轮结束\n第三轮开始（个人赛模式）",
+                points: 0,
+                answer: "",
+                rationale: "",
+                isRoundSeparator: true
+            });
+        }
+        if (q.id && q.id.startsWith("R4 ") && idx > 0 && !geographyQuestions[idx - 1].id.startsWith("R4")) {
+            rawQuestions.push({
+                id: "ROUND-SEPARATOR-3-4",
+                type: "transition",
+                text: "第三轮结束\n第四轮开始（图片线索题）",
                 points: 0,
                 answer: "",
                 rationale: "",
@@ -848,8 +859,10 @@ function getDefaultRoundState() {
         isFinishedRound1: false,
         isFinishedRound2: false,
         isFinishedRound3: false,
+        isFinishedRound4: false,
         quizFinished: false,
         eliminatedTeamIds: [],
+        eliminatedIndividualIds: [],
         individualRosterLocked: false,
         finalBonuses: {},
     };
@@ -1326,6 +1339,7 @@ function updateRoundStatusUI() {
     const r1Btn = document.getElementById('finishRound1Btn');
     const r2Btn = document.getElementById('finishRound2Btn');
     const r3Btn = document.getElementById('finishRound3Btn');
+    const r4Btn = document.getElementById('finishRound4Btn');
 
     if (!roundState) return;
 
@@ -1338,6 +1352,7 @@ function updateRoundStatusUI() {
     if (r1Btn) r1Btn.disabled = roundState.currentRound !== 1 || roundState.isFinishedRound1;
     if (r2Btn) r2Btn.disabled = roundState.currentRound !== 2 || !roundState.isFinishedRound1 || roundState.isFinishedRound2;
     if (r3Btn) r3Btn.disabled = roundState.currentRound !== 3 || !roundState.isFinishedRound2 || roundState.isFinishedRound3;
+    if (r4Btn) r4Btn.disabled = roundState.currentRound !== 4 || !roundState.isFinishedRound3 || roundState.isFinishedRound4;
 }
 
 function updateLeaderboardToggleUI() {
@@ -1411,18 +1426,21 @@ function renderIndividualLeaderboard() {
     );
 
     const quizFinished = roundState && roundState.quizFinished;
+    const eliminatedIndividuals = new Set((roundState && roundState.eliminatedIndividualIds) || []);
 
     tbody.innerHTML = sorted.map((ind, index) => {
+        const isEliminated = eliminatedIndividuals.has(ind.id);
         let rankIcon = index + 1;
         if (index === 0) rankIcon = '🥇';
         else if (index === 1) rankIcon = '🥈';
         else if (index === 2) rankIcon = '🥉';
 
-        const disabledAttr = quizFinished ? 'disabled' : '';
-        const buttonClass = quizFinished ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed' : 'hover:scale-125 transition-transform';
+        const disabledAttr = (quizFinished || isEliminated) ? 'disabled' : '';
+        const buttonClass = (quizFinished || isEliminated) ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed' : 'hover:scale-125 transition-transform';
+        const rowColor = isEliminated ? 'bg-red-50 dark:bg-red-900/40' : '';
 
         return `
-            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-150">
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-150 ${rowColor}">
                 <td class="px-2 py-2 text-xs font-medium">${rankIcon}</td>
                 <td class="px-2 py-2 text-xs">${ind.name}</td>
                 <td class="px-2 py-2 text-xs text-indigo-600 dark:text-indigo-300">${teamMap[ind.teamId] || ''}</td>
@@ -1541,6 +1559,8 @@ function finishRound(roundNum) {
         finishRound2();
     } else if (roundNum === 3) {
         finishRound3();
+    } else if (roundNum === 4) {
+        finishRound4();
     }
 }
 
@@ -1651,11 +1671,65 @@ function finishRound3() {
         return;
     }
 
-    const userConfirms = confirm("Are you sure you want to finish Round 3 and calculate final bonuses?");
+    const userConfirms = confirm("Are you sure you want to finish Round 3 and eliminate the three lowest scoring individuals?");
     if (!userConfirms) return;
 
-    // 1. Find top 3 individuals
-    const sortedIndividuals = [...individuals].sort((a, b) => b.score - a.score);
+    // 1. Find bottom 3 individuals to eliminate
+    const sortedIndividuals = [...individuals].sort((a, b) => a.score - b.score);
+    const individualsToEliminate = sortedIndividuals.slice(0, 3);
+
+    if (individuals.length < 4) {
+        alertUser("Need at least 4 individuals to eliminate three. Please check the roster.");
+        return;
+    }
+
+    const eliminatedNames = individualsToEliminate.map(i => i.name).join(', ');
+    const confirmMessage = `Eliminating individuals: ${eliminatedNames}`;
+
+    // 2. Mark individuals as eliminated
+    roundState.isFinishedRound3 = true;
+    roundState.currentRound = 4;
+    roundState.eliminatedIndividualIds.push(...individualsToEliminate.map(i => i.id));
+
+    // 3. Update individuals array
+    individuals.forEach(ind => {
+        if (roundState.eliminatedIndividualIds.includes(ind.id)) {
+            ind.eliminated = true;
+        }
+    });
+
+    saveRoundState();
+    saveIndividuals();
+
+    alertUser(`Round 3 Finished! ${confirmMessage}\n\nProceeding to Round 4.`);
+
+    // Find the round separator transition (3→4)
+    const separatorIndex = questions.findIndex(q => q.id === "ROUND-SEPARATOR-3-4");
+    if (separatorIndex !== -1) {
+        loadQuestion(separatorIndex);
+    } else {
+        console.warn("Could not find round separator 3→4");
+        // Fallback: find first question of Round 4
+        const r4Index = questions.findIndex(q => q.id.startsWith("R4"));
+        if (r4Index !== -1) {
+            loadQuestion(r4Index);
+        }
+    }
+}
+
+
+function finishRound4() {
+    if (roundState.isFinishedRound4) {
+        alertUser("Round 4 (Finals) already finished.");
+        return;
+    }
+
+    const userConfirms = confirm("Are you sure you want to finish Round 4 and calculate final bonuses?");
+    if (!userConfirms) return;
+
+    // 1. Find top 3 remaining individuals
+    const activeIndividuals = individuals.filter(i => !roundState.eliminatedIndividualIds.includes(i.id));
+    const sortedIndividuals = [...activeIndividuals].sort((a, b) => b.score - a.score);
     const topIndividuals = sortedIndividuals.slice(0, 3);
 
     // 2. Assign bonuses to their teams (if still active)
@@ -1680,7 +1754,7 @@ function finishRound3() {
     });
 
     // 3. Finalize state
-    roundState.isFinishedRound3 = true;
+    roundState.isFinishedRound4 = true;
     roundState.quizFinished = true;
     teams.sort((a, b) => b.score - a.score); // Final sort
 
@@ -1702,7 +1776,6 @@ function finishRound3() {
 
     loadQuestion(-1); // Go to final completion screen
 }
-
 
 // --- Utility Functions ---
 
