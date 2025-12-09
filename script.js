@@ -34,7 +34,7 @@ const geographyQuestions = [
         ],
         "answer": "B",
         "points": 1,
-        "rationale": "中国四大海域为渤海，黄海，东海，男孩。洱海是云南的湖"
+        "rationale": "中国四大海域为渤海，黄海，东海，南海。洱海是云南的湖"
     },
     {
         "id": "R1 必答题 003",
@@ -619,7 +619,7 @@ const geographyQuestions = [
         "answer": "印度洋",
         "points": 1,
         "image": "images/indian_ocean.png",
-        "rationale": ""
+        "rationale": "爱德华王子群岛属于南非，索科特拉岛是也门的岛屿，以龙血树闻名。安达曼-尼科巴群岛属于印度。世界上最长的海峡是莫桑比克海峡。蒙巴萨是肯尼亚的港口城市，马斯喀特和科伦坡分别是阿曼和斯里兰卡的首都。雅鲁藏布江在孟加拉国注入印度洋。"
     },
     {
         "id": "R4 图片线索题 057",
@@ -637,7 +637,7 @@ const geographyQuestions = [
         "answer": "南极洲",
         "points": 1,
         "image": "images/ross_dependency.png",
-        "rationale": ""
+        "rationale": "沃斯托克，即Vostok，意译为“东方湖”，靠近俄罗斯南极考察站东方站。火地群岛分属智利和阿根廷，与南设得兰群岛之间相隔着德雷克海峡。"
     },
     {
         "id": "R4 图片线索题 059",
@@ -655,7 +655,7 @@ const geographyQuestions = [
         "answer": "玻利维亚",
         "points": 1,
         "image": "images/bolivia.png",
-        "rationale": "硝石战争，又称鸟粪战争和南美太平洋战争"
+        "rationale": "硝石战争，又称鸟粪战争和南美太平洋战争，玻利维亚和秘鲁输给了智利，玻利维亚的滨海省1904年被正式割让给智利，即今天智利的安托法加斯塔大区。的的喀喀湖位于玻利维亚和秘鲁边境，海拔约3800米，面积8372平方千米。"
     },
     {
         "id": "R4 图片线索题 061",
@@ -664,7 +664,7 @@ const geographyQuestions = [
         "answer": "西伯利亚",
         "points": 1,
         "image": "images/siberia.png",
-        "rationale": ""
+        "rationale": "米尔矿场最早于1957年开始被发掘，2009年以来地下采矿活动一直处于活跃状态。东卡国家公园位于贝加尔湖西南方，而俄罗斯最常见的行政单位名称就是“边疆区”和“共和国”，其中萨哈共和国面积约308万平方千米，首府是雅库茨克。"
     },
     {
         "id": "R4 图片线索题 062",
@@ -673,7 +673,7 @@ const geographyQuestions = [
         "answer": "捷克共和国",
         "points": 1,
         "image": "images/czech.png",
-        "rationale": ""
+        "rationale": "切申（捷欣）是捷克和波兰边境的地区，历史上多次被来回划分。布拉格历史上一共发生了三次掷出窗外事件（Defenestration），1618年事件缘由的本质是新教教徒遭受迫害而发动起义。此事件后波西米亚独立，进而引发宗教战争。伏尔塔瓦河则被斯美塔那在他的交响诗组曲《我的祖国》中描绘并歌颂。"
     },
     {
         "id": "R4 图片线索题 063",
