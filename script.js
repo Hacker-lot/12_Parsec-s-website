@@ -272,7 +272,7 @@ const geographyQuestions = [
             "D.北美洲"
         ],
         "answer": "A",
-        "points": 1,
+        "points": 3,
         "rationale": "世界上陆地面积最小的大洲是大洋洲，倒数第二是欧洲，面积约1053万平方千米。"
     },
     {
@@ -286,7 +286,7 @@ const geographyQuestions = [
             "D.萨武海"
         ],
         "answer": "C",
-        "points": 1,
+        "points": 3,
         "rationale": "亚德里亚海大致位于意大利和巴尔干半岛之间，萨武海大致位于印尼和帝汶岛之间。"
     },
     {
@@ -300,7 +300,7 @@ const geographyQuestions = [
             "D.婆罗洲（加里曼丹岛）"
         ],
         "answer": "A",
-        "points": 1,
+        "points": 3,
         "rationale": "棉兰老岛是菲律宾的第二大岛"
     },
     {
@@ -314,7 +314,7 @@ const geographyQuestions = [
             "D.斯洛伐克"
         ],
         "answer": "D",
-        "points": 1,
+        "points": 3,
         "rationale": "斯洛伐克的主要山脉是喀尔巴阡山脉，前三国都可以领略壮丽的阿尔卑斯山脉景色。"
     },
     {
@@ -328,7 +328,7 @@ const geographyQuestions = [
             "D.东帝汶"
         ],
         "answer": "C",
-        "points": 1,
+        "points": 3,
         "rationale": "孟加拉国在地理区域的划分上属于南亚。"
     },
     {
@@ -392,7 +392,7 @@ const geographyQuestions = [
         "type": "short-answer",
         "text": "叙利亚的首都是？",
         "answer": "大马士革",
-        "points": 5,
+        "points": 3,
         "rationale": ""
     },
     {
@@ -400,7 +400,7 @@ const geographyQuestions = [
         "type": "short-answer",
         "text": "2025年10月13日，佛得角在美加墨世界杯预选赛中以小组第一的身份获得直通世界杯的资格。这个岛国位于哪片海域上？",
         "answer": "大西洋",
-        "points": 5,
+        "points": 3,
         "rationale": ""
     },
     {
@@ -408,7 +408,7 @@ const geographyQuestions = [
         "type": "short-answer",
         "text": "2025年11月9日，一艘中国渔船在全罗南道附近海域倾覆。全罗南道属于哪个国家？",
         "answer": "韩国",
-        "points": 5,
+        "points": 3,
         "rationale": ""
     },
     {
@@ -416,7 +416,7 @@ const geographyQuestions = [
         "type": "short-answer",
         "text": "埃及的亚洲部分主要位于哪个半岛上？",
         "answer": "西奈半岛",
-        "points": 5,
+        "points": 3,
         "rationale": ""
     },
     {
@@ -424,7 +424,7 @@ const geographyQuestions = [
         "type": "short-answer",
         "text": "印度河主要流经哪个国家？",
         "answer": "巴基斯坦",
-        "points": 5,
+        "points": 3,
         "rationale": ""
     },
     {
@@ -432,7 +432,7 @@ const geographyQuestions = [
         "type": "short-answer",
         "text": "长征二号F遥二十一运载火箭于2025年10月31日在酒泉卫星发射中心成功发射了神舟二十一号载人飞船。酒泉市位于哪个省？",
         "answer": "甘肃",
-        "points": 5,
+        "points": 3,
         "rationale": ""
     },
     {
@@ -440,7 +440,7 @@ const geographyQuestions = [
         "type": "short-answer",
         "text": "2012年，匈牙利时任总统帕尔·施米特因被指控抄袭博士论文引咎辞职。匈牙利的首都被哪条河流穿过？",
         "answer": "多瑙河",
-        "points": 5,
+        "points": 3,
         "rationale": ""
     },
     {
@@ -448,7 +448,7 @@ const geographyQuestions = [
         "type": "short-answer",
         "text": "“七丘之城”说的是哪个城市？",
         "answer": "罗马",
-        "points": 5,
+        "points": 3,
         "rationale": ""
     },
     {
@@ -456,7 +456,7 @@ const geographyQuestions = [
         "type": "short-answer",
         "text": "位于欧洲中部的“音乐之都”是？",
         "answer": "维也纳",
-        "points": 5,
+        "points": 3,
         "rationale": ""
     },
     {
@@ -464,7 +464,7 @@ const geographyQuestions = [
         "type": "short-answer",
         "text": "中国唯一的北冰洋水系河流是？",
         "answer": "额尔齐斯河",
-        "points": 5,
+        "points": 3,
         "rationale": ""
     },
     {
@@ -472,7 +472,7 @@ const geographyQuestions = [
         "type": "short-answer",
         "text": "2025年1月20日，特朗普第二次在白宫就任。白宫位于华盛顿D.C.，其中D.C.表示的含义是？",
         "answer": "哥伦比亚特区",
-        "points": 5,
+        "points": 3,
         "rationale": ""
     },
     {
@@ -480,7 +480,7 @@ const geographyQuestions = [
         "type": "short-answer",
         "text": "2014年，俄罗斯城市索契举办了冬奥会。索契在哪片海域沿岸？",
         "answer": "黑海",
-        "points": 5,
+        "points": 3,
         "rationale": ""
     },
     {
@@ -488,7 +488,7 @@ const geographyQuestions = [
         "type": "short-answer",
         "text": "中国领海最南端位于？",
         "answer": "曾母暗沙",
-        "points": 1,
+        "points": 3,
         "rationale": ""
     },
     {
@@ -512,7 +512,7 @@ const geographyQuestions = [
         "type": "short-answer",
         "text": "《吕氏春秋》的作者是秦国丞相吕不韦。秦国的都城是？",
         "answer": "咸阳",
-        "points": 5,
+        "points": 1,
         "rationale": ""
     },
     {
@@ -520,7 +520,7 @@ const geographyQuestions = [
         "type": "short-answer",
         "text": "红军长征途中“巧渡”的是哪条河流？",
         "answer": "这条河流位于我国西南地区，是长江的上游河段。金沙江",
-        "points": 5,
+        "points": 1,
         "rationale": ""
     },
     {
@@ -528,7 +528,7 @@ const geographyQuestions = [
         "type": "short-answer",
         "text": "Jon Krakauer的书”Into the Wild”的主人公Chris McCandless长途跋涉来到阿拉斯加。阿拉斯加的最高峰是麦金利山，它的另一个名字是？",
         "answer": "迪纳利山",
-        "points": 5,
+        "points": 1,
         "rationale": ""
     },
     {
@@ -536,7 +536,7 @@ const geographyQuestions = [
         "type": "short-answer",
         "text": "江南三大名楼分别是？",
         "answer": "（需答出3个）黄鹤楼 岳阳楼 滕王阁",
-        "points": 5,
+        "points": 1,
         "rationale": ""
     },
     {
@@ -544,7 +544,7 @@ const geographyQuestions = [
         "type": "short-answer",
         "text": "《陋室铭》中作者以“南阳诸葛庐，西蜀子云亭”自比。南阳位于那个省份？",
         "answer": "河南",
-        "points": 5,
+        "points": 1,
         "rationale": ""
     },
     {
@@ -552,7 +552,7 @@ const geographyQuestions = [
         "type": "short-answer",
         "text": "苏轼在哪里写下了《记承天寺夜游》？",
         "answer": "黄冈（接受黄州）",
-        "points": 5,
+        "points": 1,
         "rationale": ""
     },
     {
@@ -560,7 +560,7 @@ const geographyQuestions = [
         "type": "short-answer",
         "text": "韦达定理指出，对于方程𝑎𝑥²+𝑏𝑥+𝑐=0，其两根之和等于-b/a，两根之积等于c/a。韦达是哪国人？",
         "answer": "法国人",
-        "points": 5,
+        "points": 1,
         "rationale": ""
     },
     {
@@ -568,7 +568,7 @@ const geographyQuestions = [
         "type": "short-answer",
         "text": "法国化学家拉瓦锡在1774年通过拉瓦锡实验提出“提出空气由约20%氧气和80%氮气组成”。拉瓦锡最后死于哪里？",
         "answer": "被处死于巴黎",
-        "points": 5,
+        "points": 1,
         "rationale": ""
     },
     {
@@ -576,7 +576,7 @@ const geographyQuestions = [
         "type": "short-answer",
         "text": "詹姆斯·沃森和弗朗西斯·克里克在1953年共同提出了DNA的双螺旋结构模型。届时，他们的研究处在卡文迪许实验室。这座实验室位于英国哪座城市？",
         "answer": "剑桥",
-        "points": 5,
+        "points": 1,
         "rationale": ""
     },
     {
