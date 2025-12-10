@@ -231,7 +231,7 @@ const geographyQuestions = [
         ],
         "answer": "A",
         "points": 5,
-        "rationale": "赤道大致穿过非洲中部，阿尔及利亚位于北非。"
+        "rationale": "赤道大致穿过非洲中部，赤道几内亚名字虽带“赤道”二字，其主体领土却位于北纬1.6°左右的位置，赤道仅穿过其领土间的海域。"
     },
     {
         "id": "R1 必答题 017",
@@ -1276,7 +1276,7 @@ function subtractScore(teamId) {
 
     if (team) {
         const oldScore = team.score;
-        team.score = Math.max(0, team.score - points); // Prevent negative scores
+        team.score = team.score - points; // Allow negative scores
         saveTeams();
         animateScoreUpdate(`score-${team.id}`, oldScore, team.score);
         showAvatarFeedback(false); // Wrong answer feedback
@@ -1544,6 +1544,7 @@ function addScoreIndividual(individualId) {
         individual.score += points;
         saveIndividuals();
         animateScoreUpdate(`individual-score-${individual.id}`, oldScore, individual.score);
+        showAvatarFeedback(true); // Correct answer feedback
     }
 }
 
@@ -1556,9 +1557,10 @@ function subtractScoreIndividual(individualId) {
 
     if (individual) {
         const oldScore = individual.score;
-        individual.score = Math.max(0, individual.score - points);
+        individual.score = individual.score - points; // Allow negative scores
         saveIndividuals();
         animateScoreUpdate(`individual-score-${individual.id}`, oldScore, individual.score);
+        showAvatarFeedback(false); // Wrong answer feedback
     }
 }
 
