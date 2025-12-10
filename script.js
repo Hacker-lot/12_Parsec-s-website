@@ -1015,28 +1015,48 @@ function renderLeaderboard() {
             </tr>
         `;
     } else {
-        const isAnswerRevealed = currentQuestionIndex > -1 && questions[currentQuestionIndex].isRevealed;
-        leaderboardList.innerHTML = teams.map((team, index) => {
-            const isTopTeam = index === 0 && team.score > 0;
+        const eliminatedIds = (roundState && roundState.eliminatedTeamIds) || [];
+        
+        // Separate active and eliminated teams
+        const activeTeams = teams.filter(t => !eliminatedIds.includes(t.id));
+        const eliminatedTeams = teams.filter(t => eliminatedIds.includes(t.id));
+        
+        // Create combined list: active teams first (by rank), then eliminated teams (by elimination order)
+        const rankedTeams = activeTeams.map((team, index) => ({
+            ...team,
+            rank: index + 1,
+            isEliminated: false
+        }));
+        
+        // Add eliminated teams with their elimination positions
+        eliminatedTeams.forEach((team, eliminationIndex) => {
+            rankedTeams.push({
+                ...team,
+                rank: activeTeams.length + eliminationIndex + 1,
+                isEliminated: true
+            });
+        });
 
-            // FIX START: Safely access eliminatedTeamIds, defaulting to an empty array if missing.
-            const eliminatedIds = (roundState && roundState.eliminatedTeamIds) || [];
-            const isEliminated = eliminatedIds.includes(team.id);
-            // FIX END
+        const isAnswerRevealed = currentQuestionIndex > -1 && questions[currentQuestionIndex].isRevealed;
+        leaderboardList.innerHTML = rankedTeams.map((teamData) => {
+            const team = teamData;
+            const index = teamData.rank - 1;
+            const isTopTeam = index === 0 && team.score > 0 && !team.isEliminated;
 
             const scoreClass = isTopTeam
                 ? 'text-xl font-extrabold text-green-600'
                 : 'text-lg font-semibold';
-            const rowColor = isEliminated
+            const rowColor = team.isEliminated
                 ? 'bg-red-50 dark:bg-red-900/40'
                 : (roundState && roundState.currentRound >= 3 ? 'bg-green-50 dark:bg-green-900/30' : '');
-            let rankIcon = index + 1;
+            
+            let rankIcon = team.rank;
             if (isTopTeam) rankIcon = '🥇';
-            else if (index === 1) rankIcon = '🥈';
-            else if (index === 2) rankIcon = '🥉';
+            else if (index === 1 && !team.isEliminated) rankIcon = '🥈';
+            else if (index === 2 && !team.isEliminated) rankIcon = '🥉';
 
-            const disabledAttr = isEliminated ? 'disabled' : '';
-            const buttonClass = isEliminated ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed' : 'hover:scale-125 transition-transform';
+            const disabledAttr = team.isEliminated ? 'disabled' : '';
+            const buttonClass = team.isEliminated ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed' : 'hover:scale-125 transition-transform';
 
             return `
                 <tr class="team-row hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-150 ${rowColor}">
