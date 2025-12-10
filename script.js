@@ -507,6 +507,22 @@ const geographyQuestions = [
         "points": 1,
         "rationale": ""
     },
+  {
+        "id": "R2 加赛抢答题 042",
+        "type": "short-answer",
+        "text": "中美洲国家哥斯达黎加，其领土最南端与哪个国家接壤？",
+        "answer": "巴拿马",
+        "points": 1,
+        "rationale": ""
+    },
+    {
+        "id": "R2 加赛抢答题 042",
+        "type": "short-answer",
+        "text": "2025 年男篮世界杯在卡塔尔举办，卡塔尔位于哪个海湾沿岸？",
+        "answer": "波斯湾",
+        "points": 1,
+        "rationale": ""
+    },
     {
         "id": "R3 简答题 043",
         "type": "short-answer",
