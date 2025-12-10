@@ -392,7 +392,7 @@ const geographyQuestions = [
         "type": "short-answer",
         "text": "叙利亚的首都是？",
         "answer": "大马士革",
-        "points": 1,
+        "points": 3,
         "rationale": ""
     },
     {
@@ -400,7 +400,7 @@ const geographyQuestions = [
         "type": "short-answer",
         "text": "2025年10月13日，佛得角在美加墨世界杯预选赛中以小组第一的身份获得直通世界杯的资格。这个岛国位于哪片海域上？",
         "answer": "大西洋",
-        "points": 1,
+        "points": 3,
         "rationale": ""
     },
     {
@@ -408,7 +408,7 @@ const geographyQuestions = [
         "type": "short-answer",
         "text": "2025年11月9日，一艘中国渔船在全罗南道附近海域倾覆。全罗南道属于哪个国家？",
         "answer": "韩国",
-        "points": 1,
+        "points": 3,
         "rationale": ""
     },
     {
@@ -416,7 +416,7 @@ const geographyQuestions = [
         "type": "short-answer",
         "text": "埃及的亚洲部分主要位于哪个半岛上？",
         "answer": "西奈半岛",
-        "points": 1,
+        "points": 3,
         "rationale": ""
     },
     {
@@ -424,7 +424,7 @@ const geographyQuestions = [
         "type": "short-answer",
         "text": "印度河主要流经哪个国家？",
         "answer": "巴基斯坦",
-        "points": 1,
+        "points": 3,
         "rationale": ""
     },
     {
@@ -432,7 +432,7 @@ const geographyQuestions = [
         "type": "short-answer",
         "text": "长征二号F遥二十一运载火箭于2025年10月31日在酒泉卫星发射中心成功发射了神舟二十一号载人飞船。酒泉市位于哪个省？",
         "answer": "甘肃",
-        "points": 1,
+        "points": 3,
         "rationale": ""
     },
     {
@@ -440,7 +440,7 @@ const geographyQuestions = [
         "type": "short-answer",
         "text": "2012年，匈牙利时任总统帕尔·施米特因被指控抄袭博士论文引咎辞职。匈牙利的首都被哪条河流穿过？",
         "answer": "多瑙河",
-        "points": 1,
+        "points": 3,
         "rationale": ""
     },
     {
@@ -448,7 +448,7 @@ const geographyQuestions = [
         "type": "short-answer",
         "text": "“七丘之城”说的是哪个城市？",
         "answer": "罗马",
-        "points": 1,
+        "points": 3,
         "rationale": ""
     },
     {
@@ -456,7 +456,7 @@ const geographyQuestions = [
         "type": "short-answer",
         "text": "位于欧洲中部的“音乐之都”是？",
         "answer": "维也纳",
-        "points": 1,
+        "points": 3,
         "rationale": ""
     },
     {
@@ -464,7 +464,7 @@ const geographyQuestions = [
         "type": "short-answer",
         "text": "中国唯一的北冰洋水系河流是？",
         "answer": "额尔齐斯河",
-        "points": 1,
+        "points": 3,
         "rationale": ""
     },
     {
@@ -472,7 +472,7 @@ const geographyQuestions = [
         "type": "short-answer",
         "text": "2025年1月20日，特朗普第二次在白宫就任。白宫位于华盛顿D.C.，其中D.C.表示的含义是？",
         "answer": "哥伦比亚特区",
-        "points": 1,
+        "points": 3,
         "rationale": ""
     },
     {
@@ -480,7 +480,7 @@ const geographyQuestions = [
         "type": "short-answer",
         "text": "2014年，俄罗斯城市索契举办了冬奥会。索契在哪片海域沿岸？",
         "answer": "黑海",
-        "points": 1,
+        "points": 3,
         "rationale": ""
     },
     {
@@ -534,8 +534,8 @@ const geographyQuestions = [
     {
         "id": "R3 简答题 044",
         "type": "short-answer",
-        "text": "红军长征途中“巧渡”的是哪条河流？",
-        "answer": "这条河流位于我国西南地区，是长江的上游河段。金沙江",
+        "text": "红军长征途中“巧渡”的是哪条河流？这条河流位于我国西南地区，是长江的上游河段。",
+        "answer": "金沙江",
         "points": 1,
         "rationale": ""
     },
