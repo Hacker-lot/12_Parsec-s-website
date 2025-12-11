@@ -222,7 +222,7 @@ const geographyQuestions = [
     {
         "id": "R1 必答题 005",
         "type": "multiple-choice",
-        "text": "以下哪个国家不被赤道穿过？",
+        "text": "以下哪个国家领土不被赤道穿过？",
         "options": [
             "A.赤道几内亚",
             "B.加蓬",
