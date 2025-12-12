@@ -1457,19 +1457,43 @@ function renderIndividualLeaderboard() {
     const indexMap = {};
     individuals.forEach((ind, idx) => { indexMap[ind.id] = idx; });
 
-    const sorted = [...individuals].sort((a, b) =>
+    const quizFinished = roundState && roundState.quizFinished;
+    const eliminatedIndividualIds = (roundState && roundState.eliminatedIndividualIds) || [];
+    
+    // Separate active and eliminated individuals
+    const activeIndividuals = individuals.filter(ind => !eliminatedIndividualIds.includes(ind.id));
+    const eliminatedIndividualsArr = individuals.filter(ind => eliminatedIndividualIds.includes(ind.id));
+    
+    // Sort active individuals by score, then by original order
+    const sortedActive = [...activeIndividuals].sort((a, b) =>
         b.score - a.score || indexMap[a.id] - indexMap[b.id]
     );
+    
+    // Create ranked list: active individuals first, then eliminated in elimination order
+    const rankedIndividuals = sortedActive.map((ind, index) => ({
+        ...ind,
+        rank: index + 1,
+        isEliminated: false
+    }));
+    
+    // Add eliminated individuals with their elimination positions
+    eliminatedIndividualsArr.forEach((ind, eliminationIndex) => {
+        rankedIndividuals.push({
+            ...ind,
+            rank: sortedActive.length + eliminationIndex + 1,
+            isEliminated: true
+        });
+    });
 
-    const quizFinished = roundState && roundState.quizFinished;
-    const eliminatedIndividuals = new Set((roundState && roundState.eliminatedIndividualIds) || []);
+    const eliminatedIndividuals = new Set(eliminatedIndividualIds);
 
-    tbody.innerHTML = sorted.map((ind, index) => {
-        const isEliminated = eliminatedIndividuals.has(ind.id);
-        let rankIcon = index + 1;
-        if (index === 0) rankIcon = '🥇';
-        else if (index === 1) rankIcon = '🥈';
-        else if (index === 2) rankIcon = '🥉';
+    tbody.innerHTML = rankedIndividuals.map((indData) => {
+        const ind = indData;
+        const isEliminated = indData.isEliminated;
+        let rankIcon = ind.rank;
+        if (ind.rank === 1 && !isEliminated) rankIcon = '🥇';
+        else if (ind.rank === 2 && !isEliminated) rankIcon = '🥈';
+        else if (ind.rank === 3 && !isEliminated) rankIcon = '🥉';
 
         const disabledAttr = (quizFinished || isEliminated) ? 'disabled' : '';
         const buttonClass = (quizFinished || isEliminated) ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed' : 'hover:scale-125 transition-transform';
