@@ -839,13 +839,13 @@ function loadTeams() {
 }
 
 function getDefaultTeams() {
-    return [
-        { id: 5, name: "嘎拉皇室队", score: 0 },
-        { id: 3, name: "北伦敦之王", score: 0 },
-        { id: 6, name: "大于五个汉字", score: 0 },
+    return [        
         { id: 1, name: "请输入文本", score: 0 },
         { id: 2, name: "何意味", score: 0 },
-        { id: 4, name: "摇摇椅:)", score: 0 }
+        { id: 3, name: "北伦敦之王", score: 0 },
+        { id: 4, name: "摇摇椅:)", score: 0 },
+        { id: 5, name: "嘎拉皇室队", score: 0 },
+        { id: 6, name: "大于五个汉字", score: 0 }
     ];
 }
 
