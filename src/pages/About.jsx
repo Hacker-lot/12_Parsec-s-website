@@ -25,7 +25,8 @@ const SPECS = [
   ['CODENAME', 'MILLENNIUM FALCON'],
 ]
 
-function TeapotPortrait() {
+function TeapotPortrait({ visitCount }) {
+  const leak = Math.min(100, (visitCount / 5) * 100)
   return (
     <div className="teapot-error" role="img" aria-label="HTTP 418: I'm a teapot. Portrait data intentionally unavailable.">
       <div className="teapot-error__grid" aria-hidden="true" />
@@ -71,8 +72,8 @@ function TeapotPortrait() {
       <p className="teapot-error__sub">PORTRAIT REQUEST REFUSED<br />THE SUBJECT IS BREWING.</p>
       <div className="teapot-error__status">
         <span>ERR // SHORT_AND_STOUT</span>
-        <i />
-        <span>IDENTITY LEAK: 0.00%</span>
+        <i style={{ '--identity-progress': `${leak}%` }} />
+        <span>IDENTITY LEAK: {leak.toFixed(2)}%</span>
       </div>
 
       <span className="teapot-error__slice teapot-error__slice--one" aria-hidden="true">418 // TEAPOT</span>
@@ -82,7 +83,26 @@ function TeapotPortrait() {
   )
 }
 
-export default function About({ orderUnlocked = false, onLaunchGame }) {
+function MakerPortrait() {
+  return (
+    <div className="maker-portrait" role="img" aria-label="Maker portrait unlocked. Placeholder image currently shown.">
+      <img src="/maker-placeholder.svg" alt="Placeholder portrait for the maker" />
+      <div className="maker-portrait__wash" aria-hidden="true" />
+      <div className="maker-portrait__meta">
+        <span>IDENT // MAKER</span>
+        <span>ACCESS // GRANTED</span>
+      </div>
+      <p>PORTRAIT CHANNEL RESTORED</p>
+    </div>
+  )
+}
+
+export default function About({
+  orderUnlocked = false,
+  onLaunchGame,
+  makerVisitCount = 1,
+  makerUnlocked = false,
+}) {
   const root = useRef(null)
   const [negative, setNegative] = useState(false)
 
@@ -121,7 +141,7 @@ export default function About({ orderUnlocked = false, onLaunchGame }) {
         <div className="film" data-reveal>
           <div className="film__sprockets" />
           <div className={`film__frame${negative ? ' is-negative' : ''}`}>
-            <TeapotPortrait />
+            {makerUnlocked ? <MakerPortrait /> : <TeapotPortrait visitCount={makerVisitCount} />}
             <span className="film__label">{negative ? 'POS' : 'NEG'}</span>
           </div>
           <div className="film__sprockets" />

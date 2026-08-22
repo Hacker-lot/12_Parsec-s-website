@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" role="img" aria-labelledby="title desc">
+  <title id="title">Maker portrait placeholder</title>
+  <desc id="desc">A stylized anonymous silhouette reserved for the maker's future portrait.</desc>
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#00ff66" stroke-opacity=".1" stroke-width="2"/>
+    </pattern>
+    <filter id="glow"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="800" height="800" fill="#090c09"/>
+  <rect width="800" height="800" fill="url(#grid)"/>
+  <circle cx="400" cy="282" r="145" fill="#171d18" stroke="#00ff66" stroke-width="6"/>
+  <path d="M145 720c20-202 108-294 255-294s235 92 255 294" fill="#171d18" stroke="#00ff66" stroke-width="6"/>
+  <path d="M260 280h280" stroke="#fff8e7" stroke-opacity=".25" stroke-width="48"/>
+  <path d="M276 280h248" stroke="#00ff66" stroke-width="8" filter="url(#glow)"/>
+  <path d="M72 92h220M508 92h220M72 708h170M558 708h170" stroke="#00ff66" stroke-width="3"/>
+  <g fill="#fff8e7" font-family="monospace" letter-spacing="5">
+    <text x="72" y="72" font-size="24">MAKER // UNMASKED</text>
+    <text x="72" y="758" font-size="19" opacity=".52">PLACEHOLDER FRAME // IMAGE PENDING</text>
+  </g>
+</svg>

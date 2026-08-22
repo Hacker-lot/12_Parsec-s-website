@@ -10,11 +10,35 @@ import Work from './pages/Work.jsx'
 import Projects from './pages/Projects.jsx'
 import About from './pages/About.jsx'
 import AboutAsteroidGame from './components/AboutAsteroidGame.jsx'
+import MakerReveal from './components/MakerReveal.jsx'
 
 const ORDER_TARGET = 66
+const MAKER_VISIT_TARGET = 5
+let makerVisitSnapshot = null
+
+function registerMakerVisit() {
+  // React Strict Mode may call state initializers twice in development.
+  // Cache the result for this document lifecycle so one load is one visit.
+  if (makerVisitSnapshot) return makerVisitSnapshot
+  try {
+    const stored = Number.parseInt(window.localStorage.getItem('maker-visit-count') || '0', 10)
+    const count = Math.min((Number.isFinite(stored) ? stored : 0) + 1, MAKER_VISIT_TARGET)
+    const unlocked = count >= MAKER_VISIT_TARGET
+    const revealSeen = window.localStorage.getItem('maker-reveal-seen') === 'true'
+    window.localStorage.setItem('maker-visit-count', String(count))
+    if (unlocked) window.localStorage.setItem('maker-portrait-unlocked', 'true')
+    makerVisitSnapshot = { count, unlocked, showReveal: unlocked && !revealSeen }
+    return makerVisitSnapshot
+  } catch {
+    makerVisitSnapshot = { count: 1, unlocked: false, showReveal: false }
+    return makerVisitSnapshot
+  }
+}
 
 export default function App() {
   const location = useLocation()
+  const [makerVisit] = useState(registerMakerVisit)
+  const [makerRevealActive, setMakerRevealActive] = useState(makerVisit.showReveal)
   const [orderCount, setOrderCount] = useState(0)
   const [orderUnlocked, setOrderUnlocked] = useState(() => {
     try {
@@ -55,6 +79,15 @@ export default function App() {
     setOrderCount(0)
   }
 
+  const dismissMakerReveal = () => {
+    setMakerRevealActive(false)
+    try {
+      window.localStorage.setItem('maker-reveal-seen', 'true')
+    } catch {
+      // The portrait remains unlocked for this load when storage is unavailable.
+    }
+  }
+
   let orderMessage = orderUnlocked ? 'PROTOCOL STORED // HUMAN.EXE' : 'INPUT GHOST // 0x42'
   if (orderCount >= 12) orderMessage = 'THE SECOND SIX IS LISTENING'
   if (orderCount >= 33) orderMessage = 'HALF-LIFE // ORDER UNRESOLVED'
@@ -83,13 +116,21 @@ export default function App() {
           <Route path="/projects" element={<Projects />} />
           <Route
             path="/about"
-            element={<About orderUnlocked={orderUnlocked} onLaunchGame={() => setGameActive(true)} />}
+            element={(
+              <About
+                orderUnlocked={orderUnlocked}
+                onLaunchGame={() => setGameActive(true)}
+                makerVisitCount={makerVisit.count}
+                makerUnlocked={makerVisit.unlocked}
+              />
+            )}
           />
           <Route path="*" element={<Home />} />
         </Routes>
       </main>
       <Footer />
       <AboutAsteroidGame active={gameActive} onExit={exitGame} />
+      <MakerReveal active={makerRevealActive} onDismiss={dismissMakerReveal} />
     </>
   )
 }
