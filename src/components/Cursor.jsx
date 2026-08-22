@@ -16,10 +16,10 @@ export default function Cursor() {
     const GAP = 7
     const pointer = { x: window.innerWidth / 2, y: window.innerHeight / 2 }
     const positions = Array.from({ length: 4 }, () => [pointer.x, pointer.y])
-    const velocities = Array.from({ length: 4 }, () => [0, 0])
     const targets = Array.from({ length: 4 }, () => [pointer.x, pointer.y])
-    const stiffness = [0.115, 0.101, 0.092, 0.083]
-    const damping = [0.76, 0.775, 0.79, 0.805]
+    // A small difference between corners keeps the frame organic without
+    // introducing overshoot or the loose rubber-band movement it had before.
+    const cornerEase = [0.22, 0.2, 0.19, 0.17]
     let hoverEl = null
     let raf = 0
 
@@ -34,12 +34,9 @@ export default function Cursor() {
       hoverEl = next
       const framing = Boolean(hoverEl)
       cross.classList.toggle('is-framing', framing)
-      corners.forEach((corner, index) => {
+      corners.forEach((corner) => {
         corner.classList.toggle('is-framing', framing)
-        if (framing) {
-          corner.style.setProperty('--corner-delay', `${index * 26}ms`)
-          retrigger(corner, 'is-locking')
-        }
+        corner.classList.remove('is-locking')
       })
     }
 
@@ -103,12 +100,8 @@ export default function Cursor() {
 
     const onUp = () => {
       cross.classList.remove('is-pressed')
-      corners.forEach((corner, index) => {
+      corners.forEach((corner) => {
         corner.classList.remove('is-pressed')
-        if (hoverEl) {
-          corner.style.setProperty('--corner-delay', `${index * 22}ms`)
-          retrigger(corner, 'is-locking')
-        }
       })
     }
 
@@ -126,14 +119,8 @@ export default function Cursor() {
       updateTargets()
 
       for (let index = 0; index < corners.length; index += 1) {
-        velocities[index][0] =
-          (velocities[index][0] + (targets[index][0] - positions[index][0]) * stiffness[index]) *
-          damping[index]
-        velocities[index][1] =
-          (velocities[index][1] + (targets[index][1] - positions[index][1]) * stiffness[index]) *
-          damping[index]
-        positions[index][0] += velocities[index][0]
-        positions[index][1] += velocities[index][1]
+        positions[index][0] += (targets[index][0] - positions[index][0]) * cornerEase[index]
+        positions[index][1] += (targets[index][1] - positions[index][1]) * cornerEase[index]
         corners[index].style.transform =
           `translate3d(${positions[index][0]}px, ${positions[index][1]}px, 0)`
       }

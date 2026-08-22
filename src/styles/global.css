@@ -171,7 +171,7 @@ canvas {
   height: 18px;
   opacity: 0;
   scale: 0.55;
-  transition: opacity 0.12s ease;
+  transition: opacity 0.14s ease, scale 0.16s ease;
 }
 .corner.is-framing {
   opacity: 1;
@@ -180,7 +180,7 @@ canvas {
   animation: cursorBracketLock 0.48s var(--corner-delay, 0ms) cubic-bezier(0.2, 0.86, 0.25, 1.18) both;
 }
 .corner.is-pressed {
-  scale: 0.82;
+  scale: 0.94;
 }
 .corner--tl {
   border-top: 2px solid var(--accent);
@@ -235,7 +235,7 @@ body.asteroid-game-active .cursor-cross::after {
 }
 @keyframes cursorFire {
   0% { scale: 1; }
-  45% { scale: 0.42; rotate: 45deg; }
+  45% { scale: 0.78; rotate: 8deg; }
   100% { scale: 1; rotate: 0deg; }
 }
 
