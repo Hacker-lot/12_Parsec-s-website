@@ -343,9 +343,23 @@ export default function Cabinet3D({ projects, selectedId, onSelect }) {
         browseTarget = clamp(browseTarget + (dy / rect.height) * projects.length * 2.35, 0, projects.length - 1)
         browseVelocity += (dy / rect.height) * 0.9
         lastY = localY
-      } else if (event.pointerType === 'mouse' && !selectedRef.current) {
-        browseTarget = clamp((localY / rect.height) * projects.length - 0.35, 0, projects.length - 1)
       }
+    }
+    const onWheel = (event) => {
+      if (selectedRef.current) return
+      const max = projects.length - 1
+      const unit = event.deltaMode === WheelEvent.DOM_DELTA_LINE
+        ? 18
+        : event.deltaMode === WheelEvent.DOM_DELTA_PAGE
+          ? canvas.clientHeight
+          : 1
+      const delta = event.deltaY * unit
+      const canBrowse = (delta > 0 && browseTarget < max) || (delta < 0 && browseTarget > 0)
+      if (!canBrowse) return
+
+      event.preventDefault()
+      browseTarget = clamp(browseTarget + delta * 0.0042, 0, max)
+      browseVelocity += clamp(delta * 0.00038, -0.16, 0.16)
     }
     const finishPointer = (event) => {
       if (!pointerDown || event.pointerId !== pointerId) return
@@ -374,6 +388,7 @@ export default function Cabinet3D({ projects, selectedId, onSelect }) {
     canvas.addEventListener('pointermove', onPointerMove)
     canvas.addEventListener('pointerup', finishPointer)
     canvas.addEventListener('pointercancel', finishPointer)
+    canvas.addEventListener('wheel', onWheel, { passive: false })
 
     const updatePaperBend = (paper, bend) => {
       const data = paper.userData
@@ -415,16 +430,19 @@ export default function Cabinet3D({ projects, selectedId, onSelect }) {
         const baseY = -0.15 + index * 0.11
         const baseZ = 0.73 - index * 0.075
 
-        let x = 0
-        let y = baseY + passed * 0.42
-        let z = baseZ + passed * 0.7 + proximity * 0.12 + (hovered ? 0.1 : 0)
-        let rotationX = -0.035 - passed * 0.085
+        const fallSide = index % 2 === 0 ? -1 : 1
+        let x = fallSide * passed * (0.38 + index * 0.025)
+        let y = baseY - passed * (3.25 + index * 0.08)
+        let z = baseZ + passed * 0.5 + proximity * 0.12 + (hovered ? 0.1 : 0)
+        let rotationX = -0.035 - passed * 0.24
+        let rotationZ = fallSide * passed * 0.12
         let scale = 1
 
         if (selected) {
           y = 0.18
           z = 3.15
           rotationX = -0.01
+          rotationZ = 0
           scale = 1.13
         } else if (anotherSelected) {
           z -= 0.32
@@ -437,17 +455,20 @@ export default function Cabinet3D({ projects, selectedId, onSelect }) {
         paper.position.lerp(targetPosition, ease)
         paper.scale.lerp(targetScale, ease)
         paper.rotation.x += (rotationX - paper.rotation.x) * ease
+        paper.rotation.z += (rotationZ - paper.rotation.z) * ease
 
         const bend = selected ? 0.025 : 0.055 + passed * 0.2 + proximity * 0.16 + Math.min(Math.abs(browseVelocity) * 1.7, 0.24)
         updatePaperBend(paper, bend)
 
-        const opacity = anotherSelected ? 0.42 : 1
-        paper.userData.material.transparent = opacity < 1
+        const browseOpacity = 1 - passed * 0.96
+        const opacity = anotherSelected ? Math.min(0.42, browseOpacity) : browseOpacity
+        paper.userData.material.transparent = true
         paper.userData.material.opacity += (opacity - paper.userData.material.opacity) * 0.14
-        paper.userData.tabMaterial.transparent = opacity < 1
+        paper.userData.tabMaterial.transparent = true
         paper.userData.tabMaterial.opacity = paper.userData.material.opacity
-        paper.userData.labelMaterial.transparent = opacity < 1
+        paper.userData.labelMaterial.transparent = true
         paper.userData.labelMaterial.opacity = paper.userData.material.opacity
+        paper.visible = paper.userData.material.opacity > 0.025 || selected
         paper.renderOrder = selected ? 100 : index
       })
 
@@ -465,6 +486,7 @@ export default function Cabinet3D({ projects, selectedId, onSelect }) {
       canvas.removeEventListener('pointermove', onPointerMove)
       canvas.removeEventListener('pointerup', finishPointer)
       canvas.removeEventListener('pointercancel', finishPointer)
+      canvas.removeEventListener('wheel', onWheel)
       cabinet.traverse((object) => {
         object.geometry?.dispose()
         if (object.material) {

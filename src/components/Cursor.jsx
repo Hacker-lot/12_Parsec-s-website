@@ -15,8 +15,6 @@ export default function Cursor() {
     const CROSS_SIZE = 22
     const GAP = 7
     const pointer = { x: window.innerWidth / 2, y: window.innerHeight / 2 }
-    const crossPos = [pointer.x - CROSS_SIZE / 2, pointer.y - CROSS_SIZE / 2]
-    const crossVel = [0, 0]
     const positions = Array.from({ length: 4 }, () => [pointer.x, pointer.y])
     const velocities = Array.from({ length: 4 }, () => [0, 0])
     const targets = Array.from({ length: 4 }, () => [pointer.x, pointer.y])
@@ -77,9 +75,15 @@ export default function Cursor() {
       targets[3][1] = box.y + box.height - CORNER_SIZE
     }
 
-    const onMove = (event) => {
+    const placeCross = (event) => {
       pointer.x = event.clientX
       pointer.y = event.clientY
+      cross.style.transform =
+        `translate3d(${pointer.x - CROSS_SIZE / 2}px, ${pointer.y - CROSS_SIZE / 2}px, 0)`
+    }
+
+    const onMove = (event) => {
+      placeCross(event)
     }
 
     const onOver = (event) => {
@@ -87,7 +91,11 @@ export default function Cursor() {
       setHoverTarget(element)
     }
 
-    const onDown = () => {
+    const onDown = (event) => {
+      // A press can arrive without a preceding move (keyboard-assisted tools,
+      // a newly focused window, or a DOM transition). Anchor the visual cursor
+      // to the real click before animating it so the hit point never drifts.
+      placeCross(event)
       cross.classList.add('is-pressed')
       corners.forEach((corner) => corner.classList.add('is-pressed'))
       retrigger(cross, 'is-firing')
@@ -105,6 +113,8 @@ export default function Cursor() {
     }
 
     updateTargets()
+    cross.style.transform =
+      `translate3d(${pointer.x - CROSS_SIZE / 2}px, ${pointer.y - CROSS_SIZE / 2}px, 0)`
     corners.forEach((corner, index) => {
       positions[index][0] = targets[index][0]
       positions[index][1] = targets[index][1]
@@ -114,17 +124,6 @@ export default function Cursor() {
     const loop = () => {
       raf = requestAnimationFrame(loop)
       updateTargets()
-
-      const aiming = document.body.classList.contains('asteroid-game-active')
-      const crossStiffness = aiming ? 0.42 : 0.31
-      const crossDamping = aiming ? 0.7 : 0.66
-      const crossTargetX = pointer.x - CROSS_SIZE / 2
-      const crossTargetY = pointer.y - CROSS_SIZE / 2
-      crossVel[0] = (crossVel[0] + (crossTargetX - crossPos[0]) * crossStiffness) * crossDamping
-      crossVel[1] = (crossVel[1] + (crossTargetY - crossPos[1]) * crossStiffness) * crossDamping
-      crossPos[0] += crossVel[0]
-      crossPos[1] += crossVel[1]
-      cross.style.transform = `translate3d(${crossPos[0]}px, ${crossPos[1]}px, 0)`
 
       for (let index = 0; index < corners.length; index += 1) {
         velocities[index][0] =
@@ -140,7 +139,7 @@ export default function Cursor() {
       }
     }
 
-    window.addEventListener('mousemove', onMove)
+    window.addEventListener('pointermove', onMove)
     window.addEventListener('mouseover', onOver)
     window.addEventListener('mousedown', onDown)
     window.addEventListener('mouseup', onUp)
@@ -148,7 +147,7 @@ export default function Cursor() {
 
     return () => {
       cancelAnimationFrame(raf)
-      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('pointermove', onMove)
       window.removeEventListener('mouseover', onOver)
       window.removeEventListener('mousedown', onDown)
       window.removeEventListener('mouseup', onUp)

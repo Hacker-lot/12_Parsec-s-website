@@ -11,6 +11,11 @@ export default function AboutAsteroidGame({ active, onExit }) {
   const [hull, setHull] = useState(3)
   const [briefing, setBriefing] = useState(true)
 
+  const beginIntercept = () => {
+    briefingRef.current = false
+    setBriefing(false)
+  }
+
   useEffect(() => {
     activeRef.current = active
     document.body.classList.toggle('asteroid-game-active', active)
@@ -341,11 +346,8 @@ export default function AboutAsteroidGame({ active, onExit }) {
           </div>
           <button
             type="button"
-            className="btn"
-            onClick={() => {
-              briefingRef.current = false
-              setBriefing(false)
-            }}
+            className="btn about-game__begin"
+            onClick={beginIntercept}
             data-cursor
           >
             BEGIN INTERCEPT →

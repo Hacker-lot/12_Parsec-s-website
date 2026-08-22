@@ -114,7 +114,7 @@ export default function Projects() {
           </div>
           <div className="cabinet3d__gesture" aria-hidden="true">
             <span className="cabinet3d__gesture-line" />
-            <span>BRUSH VERTICAL / CLICK TO EXTRACT</span>
+            <span>SCROLL OR BRUSH VERTICAL / CLICK TO EXTRACT</span>
           </div>
           {active && (
             <button
