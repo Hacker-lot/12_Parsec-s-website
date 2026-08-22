@@ -412,17 +412,17 @@ export default function Cabinet3D({ projects, selectedId, onSelect }) {
         const passed = smoothstep(browse - index)
         const proximity = Math.max(0, 1 - Math.abs(index - browse))
         const hovered = index === hoverIndex
-        const baseY = -0.48 + index * 0.19
+        const baseY = -0.15 + index * 0.11
         const baseZ = 0.73 - index * 0.075
 
         let x = 0
-        let y = baseY - passed * 0.44
+        let y = baseY + passed * 0.42
         let z = baseZ + passed * 0.7 + proximity * 0.12 + (hovered ? 0.1 : 0)
         let rotationX = -0.035 - passed * 0.085
         let scale = 1
 
         if (selected) {
-          y = -0.05
+          y = 0.18
           z = 3.15
           rotationX = -0.01
           scale = 1.13

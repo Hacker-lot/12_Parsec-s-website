@@ -56,16 +56,23 @@ function Portrait() {
   )
 }
 
-export default function About() {
+export default function About({ orderUnlocked = false, onLaunchGame }) {
   const root = useRef(null)
   const [negative, setNegative] = useState(false)
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
       gsap.fromTo(
         '.about [data-reveal]',
-        { y: 40, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.75, ease: 'power4.out', stagger: 0.07 },
+        { y: reducedMotion ? 0 : 40, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: reducedMotion ? 0 : 0.75,
+          ease: 'power4.out',
+          stagger: reducedMotion ? 0 : 0.07,
+        },
       )
     }, root)
     return () => ctx.revert()
@@ -145,6 +152,11 @@ export default function About() {
             <a className="btn btn--ghost" href="https://12-parsec.itch.io/" target="_blank" rel="noreferrer">
               ITCH.IO →
             </a>
+            {orderUnlocked && (
+              <button type="button" className="btn about__game-launch" onClick={onLaunchGame} data-cursor>
+                ASTEROID INTERCEPT →
+              </button>
+            )}
           </div>
         </div>
       </div>

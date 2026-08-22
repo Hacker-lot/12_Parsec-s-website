@@ -10,10 +10,17 @@ export default function Work() {
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
       gsap.fromTo(
         '.work [data-reveal]',
-        { y: 40, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.7, ease: 'power4.out', stagger: 0.07 },
+        { y: reducedMotion ? 0 : 40, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: reducedMotion ? 0 : 0.7,
+          ease: 'power4.out',
+          stagger: reducedMotion ? 0 : 0.07,
+        },
       )
     }, root)
     return () => ctx.revert()

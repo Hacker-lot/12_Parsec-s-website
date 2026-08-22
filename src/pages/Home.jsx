@@ -22,12 +22,24 @@ export default function Home() {
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
       gsap.fromTo(
         '.hero [data-reveal]',
-        { y: 44, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.85, ease: 'power4.out', stagger: 0.08, delay: 0.1 },
+        { y: reducedMotion ? 0 : 44, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: reducedMotion ? 0 : 0.85,
+          ease: 'power4.out',
+          stagger: reducedMotion ? 0 : 0.08,
+          delay: reducedMotion ? 0 : 0.1,
+        },
       )
-      gsap.fromTo('.grid-horizon', { opacity: 0 }, { opacity: 1, duration: 1.4, delay: 0.5 })
+      gsap.fromTo(
+        '.grid-horizon',
+        { opacity: 0 },
+        { opacity: 1, duration: reducedMotion ? 0 : 1.4, delay: reducedMotion ? 0 : 0.5 },
+      )
     }, root)
     return () => ctx.revert()
   }, [])

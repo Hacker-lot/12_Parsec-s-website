@@ -74,6 +74,11 @@ export default function Projects() {
         ))}
       </div>
       <div className="cabinet-popup__links">
+        {active.links.site && (
+          <a className="btn cabinet-popup__link" href={active.links.site} target="_blank" rel="noreferrer">
+            OPEN SITE →
+          </a>
+        )}
         {active.links.github && (
           <a className="btn cabinet-popup__link" href={active.links.github} target="_blank" rel="noreferrer">
             GITHUB →
