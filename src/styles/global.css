@@ -99,7 +99,7 @@ canvas {
 .scanlines {
   position: fixed;
   inset: 0;
-  z-index: 50;
+  z-index: 0;
   pointer-events: none;
   background: repeating-linear-gradient(
     to bottom,
@@ -114,7 +114,7 @@ canvas {
 .vignette {
   position: fixed;
   inset: 0;
-  z-index: 49;
+  z-index: 0;
   pointer-events: none;
   background: radial-gradient(
     ellipse at center,
@@ -1042,11 +1042,25 @@ canvas {
 .cabinet3d-wrap {
   position: relative;
   width: 100%;
-  height: min(62vh, 600px);
+  height: min(72vh, 720px);
   border: 2px solid var(--paper);
   box-shadow: var(--shadow-accent);
-  background: radial-gradient(ellipse at center, #161616 0%, #0d0d0d 72%);
+  background:
+    linear-gradient(90deg, transparent 49.9%, rgba(0, 255, 102, 0.07) 50%, transparent 50.1%),
+    radial-gradient(ellipse at 50% 42%, #192019 0%, #0b0d0b 63%, #050605 100%);
   overflow: hidden;
+}
+.cabinet3d-wrap::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(0, 255, 102, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 102, 0.035) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: linear-gradient(to bottom, black, transparent 72%);
 }
 .cabinet3d {
   position: absolute;
@@ -1054,10 +1068,89 @@ canvas {
   width: 100%;
   height: 100%;
   display: block;
+  touch-action: none;
+  cursor: ns-resize;
+}
+.cabinet3d.is-over-file {
+  cursor: grab;
+}
+.cabinet3d.is-grabbing {
+  cursor: grabbing;
+}
+.cabinet3d__hud {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+  display: flex;
+  gap: 22px;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: rgba(255, 248, 231, 0.46);
+}
+.cabinet3d__hud--top {
+  top: 17px;
+  left: 20px;
+}
+.cabinet3d__gesture {
+  position: absolute;
+  z-index: 2;
+  right: 20px;
+  bottom: 18px;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 10px;
+  letter-spacing: 1.8px;
+  color: var(--accent);
+}
+.cabinet3d__gesture-line {
+  display: block;
+  width: 34px;
+  height: 1px;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+}
+.cabinet-tabs {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 2px;
+  margin-top: 16px;
+  border: 2px solid var(--paper);
+  background: var(--paper);
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.55);
+}
+.cabinet-tab {
+  min-width: 0;
+  padding: 12px 10px;
+  overflow: hidden;
+  color: var(--grey);
+  background: var(--bg-raise);
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color 0.18s, background 0.18s;
+}
+.cabinet-tab span {
+  margin-right: 8px;
+  color: var(--accent);
+}
+.cabinet-tab:hover,
+.cabinet-tab:focus-visible,
+.cabinet-tab.is-active {
+  color: var(--ink);
+  background: var(--accent);
+  outline: none;
+}
+.cabinet-tab:hover span,
+.cabinet-tab:focus-visible span,
+.cabinet-tab.is-active span {
+  color: var(--ink);
 }
 .cabinet-detail {
   margin-top: 22px;
-  min-height: 150px;
+  min-height: 210px;
   padding: 24px 30px;
   border: 2px solid var(--paper);
   background: var(--bg-soft);
@@ -1230,17 +1323,11 @@ canvas {
     gap: 16px;
     margin: 20px 0 10px;
   }
-  .cabinet3d-wrap,
-  .cabinet-detail {
-    display: none;
+  .cabinet3d-wrap {
+    height: min(68vh, 610px);
   }
-  .cabinet {
-    display: grid;
-    grid-template-columns: 1fr;
-  }
-  .cabinet__index {
-    border-right: none;
-    border-bottom: 2px solid var(--paper);
+  .cabinet-tabs {
+    grid-template-columns: repeat(2, 1fr);
   }
   .storm {
     width: 100%;
@@ -1288,6 +1375,53 @@ canvas {
 
   .hero__title .outline {
     -webkit-text-stroke: 1.5px var(--paper);
+  }
+}
+
+@media (max-width: 560px) {
+  .nav {
+    gap: 12px;
+    padding-inline: 12px;
+  }
+  .nav__brand {
+    font-size: 15px;
+  }
+  .nav__links {
+    gap: 12px;
+  }
+  .nav__link {
+    font-size: 11px;
+    letter-spacing: 1.2px;
+  }
+  .projects {
+    padding-top: 34px;
+  }
+  .projects__head {
+    padding-top: 20px;
+  }
+  .cabinet3d-wrap {
+    width: 100vw;
+    height: 540px;
+    margin-left: calc(50% - 50vw);
+    border-left: 0;
+    border-right: 0;
+  }
+  .cabinet3d__hud--top {
+    left: 12px;
+  }
+  .cabinet3d__gesture {
+    right: 12px;
+    bottom: 12px;
+    max-width: 210px;
+    font-size: 8px;
+    letter-spacing: 1.25px;
+    text-align: right;
+  }
+  .cabinet3d__gesture-line {
+    display: none;
+  }
+  .cabinet-detail {
+    padding: 22px 20px;
   }
 }
 

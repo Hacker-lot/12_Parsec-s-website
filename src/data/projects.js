@@ -6,6 +6,7 @@ export const projects = [
   {
     id: 'echo',
     index: '01',
+    codeName: 'ECHO',
     title: 'ECHO',
     subtitle: 'Game Off 2025 — sound in a silent apocalypse',
     year: '2025',
@@ -23,6 +24,7 @@ export const projects = [
   {
     id: 'trashbeats',
     index: '02',
+    codeName: 'TRASHBEATS',
     title: 'TRASHBEATS',
     subtitle: 'Godot rhythm prototype',
     year: '2026',
@@ -37,6 +39,7 @@ export const projects = [
   {
     id: 'localhost-scanner',
     index: '03',
+    codeName: 'LOCALHOST',
     title: 'LOCALHOST SCANNER',
     subtitle: 'Port scanner & manager',
     year: '2026',
@@ -51,6 +54,7 @@ export const projects = [
   {
     id: 'diy-joystick',
     index: '04',
+    codeName: 'JOYSTICK',
     title: 'DIY JOYSTICK',
     subtitle: 'Low-budget controller → Xbox',
     year: '2025',
@@ -65,6 +69,7 @@ export const projects = [
   {
     id: 'markov-rps',
     index: '05',
+    codeName: 'MARKOV-RPS',
     title: 'MARKOV RPS',
     subtitle: 'Rock-paper-scissors predictor',
     year: '2025',

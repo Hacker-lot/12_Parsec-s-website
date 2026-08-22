@@ -11,10 +11,17 @@ export default function Projects() {
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
       gsap.fromTo(
         '.projects [data-reveal]',
-        { y: 40, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.7, ease: 'power4.out', stagger: 0.07 },
+        { y: reducedMotion ? 0 : 40, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: reducedMotion ? 0 : 0.7,
+          ease: 'power4.out',
+          stagger: reducedMotion ? 0 : 0.07,
+        },
       )
     }, root)
     return () => ctx.revert()
@@ -62,34 +69,36 @@ export default function Projects() {
       </div>
 
       <div className="container">
-        {/* 3D file cabinet (desktop) */}
         <div className="cabinet3d-wrap" data-reveal>
           <Cabinet3D projects={projects} selectedId={selected} onSelect={setSelected} />
-        </div>
-        <div className="cabinet-detail" data-reveal>
-          {detail || <div className="cabinet__empty">// PULL A FILE OUT TO READ IT</div>}
+          <div className="cabinet3d__hud cabinet3d__hud--top" aria-hidden="true">
+            <span>DRAWER 01</span>
+            <span>SEC // PROJECTS</span>
+          </div>
+          <div className="cabinet3d__gesture" aria-hidden="true">
+            <span className="cabinet3d__gesture-line" />
+            <span>BRUSH VERTICAL / CLICK TO EXTRACT</span>
+          </div>
         </div>
 
-        {/* DOM cabinet (mobile fallback) */}
-        <div className="cabinet">
-          <ul className="cabinet__index">
-            {projects.map((p) => (
-              <li key={p.id}>
-                <button
-                  className={`cabinet__file${selected === p.id ? ' is-open' : ''}`}
-                  onClick={() => setSelected(selected === p.id ? null : p.id)}
-                  data-cursor
-                >
-                  <span className="cabinet__num">{p.index}</span>
-                  <span className="cabinet__name">{p.title}</span>
-                  <span className="cabinet__arrow">→</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-          <div className="cabinet__drawer">
-            {detail || <div className="cabinet__empty">// SELECT A FILE TO DRAW IT OUT</div>}
-          </div>
+        <div className="cabinet-tabs" data-reveal aria-label="Project files">
+          {projects.map((project) => (
+            <button
+              key={project.id}
+              type="button"
+              className={`cabinet-tab${selected === project.id ? ' is-active' : ''}`}
+              onClick={() => setSelected(selected === project.id ? null : project.id)}
+              aria-pressed={selected === project.id}
+              data-cursor
+            >
+              <span>{project.index}</span>
+              {project.codeName || project.title}
+            </button>
+          ))}
+        </div>
+
+        <div className="cabinet-detail" data-reveal>
+          {detail || <div className="cabinet__empty">// PULL A FILE OUT TO READ IT</div>}
         </div>
       </div>
     </div>
