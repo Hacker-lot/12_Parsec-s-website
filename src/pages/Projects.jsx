@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
 import { projects } from '../data/projects.js'
 import Cabinet3D from '../components/Cabinet3D.jsx'
@@ -8,6 +8,15 @@ export default function Projects() {
   const [selected, setSelected] = useState(null)
 
   const active = projects.find((p) => p.id === selected) || null
+
+  useEffect(() => {
+    if (!active) return undefined
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') setSelected(null)
+    }
+    window.addEventListener('keydown', closeOnEscape)
+    return () => window.removeEventListener('keydown', closeOnEscape)
+  }, [active])
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
@@ -27,33 +36,56 @@ export default function Projects() {
     return () => ctx.revert()
   }, [])
 
-  const detail = active ? (
-    <div className="cabinet__detail" key={active.id}>
-      <span className="eyebrow">
-        {active.index} // {active.year}
-      </span>
-      <h2>{active.title}</h2>
-      <p className="cabinet__sub">{active.subtitle}</p>
-      <p className="cabinet__desc">{active.desc}</p>
-      <div className="cabinet__tags">
+  const dossier = active ? (
+    <div
+      className="cabinet-popup"
+      key={active.id}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={`project-${active.id}-title`}
+    >
+      <div className="cabinet-popup__tab" aria-hidden="true">
+        {active.codeName || active.title}
+      </div>
+      <button
+        type="button"
+        className="cabinet-popup__close"
+        onClick={() => setSelected(null)}
+        aria-label="Close project file"
+        data-cursor
+      >
+        ×
+      </button>
+
+      <div className="cabinet-popup__meta">
+        <span>FILE // {active.index}</span>
+        <span>{active.year}</span>
+      </div>
+      <p className="cabinet-popup__classification">PROJECT DOSSIER</p>
+      <h2 id={`project-${active.id}-title`}>{active.title}</h2>
+      <p className="cabinet-popup__sub">{active.subtitle}</p>
+      <div className="cabinet-popup__rule" aria-hidden="true" />
+      <p className="cabinet-popup__desc">{active.desc}</p>
+      <div className="cabinet-popup__tags">
         {active.tags.map((t) => (
-          <span key={t} className="tag tag--accent">
+          <span key={t} className="cabinet-popup__tag">
             {t}
           </span>
         ))}
       </div>
-      <div className="cabinet__links">
+      <div className="cabinet-popup__links">
         {active.links.github && (
-          <a className="btn" href={active.links.github} target="_blank" rel="noreferrer">
+          <a className="btn cabinet-popup__link" href={active.links.github} target="_blank" rel="noreferrer">
             GITHUB →
           </a>
         )}
         {active.links.itch && (
-          <a className="btn btn--ghost" href={active.links.itch} target="_blank" rel="noreferrer">
+          <a className="btn cabinet-popup__link cabinet-popup__link--ghost" href={active.links.itch} target="_blank" rel="noreferrer">
             PLAY ON ITCH →
           </a>
         )}
       </div>
+      <div className="cabinet-popup__stamp" aria-hidden="true">CLEARED // 12P</div>
     </div>
   ) : null
 
@@ -79,6 +111,15 @@ export default function Projects() {
             <span className="cabinet3d__gesture-line" />
             <span>BRUSH VERTICAL / CLICK TO EXTRACT</span>
           </div>
+          {active && (
+            <button
+              type="button"
+              className="cabinet-popup__veil"
+              onClick={() => setSelected(null)}
+              aria-label="Close project file"
+            />
+          )}
+          {dossier}
         </div>
 
         <div className="cabinet-tabs" data-reveal aria-label="Project files">
@@ -95,10 +136,6 @@ export default function Projects() {
               {project.codeName || project.title}
             </button>
           ))}
-        </div>
-
-        <div className="cabinet-detail" data-reveal>
-          {detail || <div className="cabinet__empty">// PULL A FILE OUT TO READ IT</div>}
         </div>
       </div>
     </div>
