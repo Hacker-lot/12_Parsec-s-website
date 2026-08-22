@@ -57,7 +57,6 @@ export default function AboutAsteroidGame({ active, onExit }) {
 
     const raycaster = new THREE.Raycaster()
     const pointer = new THREE.Vector2()
-    const aimPoint = new THREE.Vector3()
     const asteroids = []
     const lasers = []
     const explosions = []
@@ -291,9 +290,10 @@ export default function AboutAsteroidGame({ active, onExit }) {
         if (explosion.life <= 0) removeFrom(explosions, explosion)
       }
 
-      aimPoint.set(pointer.x * 0.11, pointer.y * 0.08, 0)
-      camera.rotation.y += (aimPoint.x - camera.rotation.y) * 0.045
-      camera.rotation.x += (-aimPoint.y - camera.rotation.x) * 0.045
+      // Keep the projection stable. Moving the camera after a shot was fired
+      // shifted the laser endpoint away from the stationary screen crosshair.
+      camera.rotation.x = 0
+      camera.rotation.y = 0
       renderer.render(scene, camera)
     }
     render()

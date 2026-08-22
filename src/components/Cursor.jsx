@@ -17,9 +17,9 @@ export default function Cursor() {
     const pointer = { x: window.innerWidth / 2, y: window.innerHeight / 2 }
     const positions = Array.from({ length: 4 }, () => [pointer.x, pointer.y])
     const targets = Array.from({ length: 4 }, () => [pointer.x, pointer.y])
-    // A small difference between corners keeps the frame organic without
-    // introducing overshoot or the loose rubber-band movement it had before.
-    const cornerEase = [0.22, 0.2, 0.19, 0.17]
+    // Every corner uses the same damped interpolation so the four marks remain
+    // a rigid rectangle while it glides onto a component. No overshoot.
+    const cornerEase = 0.2
     let hoverEl = null
     let raf = 0
 
@@ -36,7 +36,6 @@ export default function Cursor() {
       cross.classList.toggle('is-framing', framing)
       corners.forEach((corner) => {
         corner.classList.toggle('is-framing', framing)
-        corner.classList.remove('is-locking')
       })
     }
 
@@ -119,8 +118,8 @@ export default function Cursor() {
       updateTargets()
 
       for (let index = 0; index < corners.length; index += 1) {
-        positions[index][0] += (targets[index][0] - positions[index][0]) * cornerEase[index]
-        positions[index][1] += (targets[index][1] - positions[index][1]) * cornerEase[index]
+        positions[index][0] += (targets[index][0] - positions[index][0]) * cornerEase
+        positions[index][1] += (targets[index][1] - positions[index][1]) * cornerEase
         corners[index].style.transform =
           `translate3d(${positions[index][0]}px, ${positions[index][1]}px, 0)`
       }
