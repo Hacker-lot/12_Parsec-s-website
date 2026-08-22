@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
 import Storm3D from '../components/Storm3D.jsx'
 import { stormImages } from '../lib/stormImages.js'
+import ScanAction from '../components/ScanAction.jsx'
 
 export default function Work() {
   const root = useRef(null)
@@ -35,9 +36,7 @@ export default function Work() {
       <div className="storm3d-wrap">
         <Storm3D images={stormImages} selectedId={selected} onSelect={setSelected} />
         {selected != null && (
-          <button className="storm3d__close" onClick={() => setSelected(null)} data-cursor>
-            ✕ CLOSE
-          </button>
+          <ScanAction label="✕ CLOSE" onClick={() => setSelected(null)} tone="ghost" compact className="storm3d__close" style={{ position: 'absolute' }} />
         )}
       </div>
 
@@ -57,9 +56,7 @@ export default function Work() {
 
       {lightbox && (
         <div className="lightbox" onClick={() => setLightbox(null)}>
-          <button className="lightbox__close" aria-label="Close">
-            ✕
-          </button>
+          <ScanAction label="✕" onClick={() => setLightbox(null)} ariaLabel="Close" tone="ghost" square className="lightbox__close" style={{ position: 'absolute' }} />
           <img src={lightbox.url} alt="" />
         </div>
       )}

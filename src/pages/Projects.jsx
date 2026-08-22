@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
 import { projects } from '../data/projects.js'
 import Cabinet3D from '../components/Cabinet3D.jsx'
+import ScanAction from '../components/ScanAction.jsx'
 
 export default function Projects() {
   const root = useRef(null)
@@ -47,15 +48,14 @@ export default function Projects() {
       <div className="cabinet-popup__tab" aria-hidden="true">
         {active.codeName || active.title}
       </div>
-      <button
-        type="button"
+      <ScanAction
+        label="×"
         className="cabinet-popup__close"
         onClick={() => setSelected(null)}
-        aria-label="Close project file"
-        data-cursor
-      >
-        ×
-      </button>
+        ariaLabel="Close project file"
+        tone="ghost"
+        square
+      />
 
       <div className="cabinet-popup__meta">
         <span>FILE // {active.index}</span>
@@ -75,19 +75,13 @@ export default function Projects() {
       </div>
       <div className="cabinet-popup__links">
         {active.links.site && (
-          <a className="btn cabinet-popup__link" href={active.links.site} target="_blank" rel="noreferrer">
-            OPEN SITE →
-          </a>
+          <ScanAction label="OPEN SITE →" href={active.links.site} newTab className="cabinet-popup__link" />
         )}
         {active.links.github && (
-          <a className="btn cabinet-popup__link" href={active.links.github} target="_blank" rel="noreferrer">
-            GITHUB →
-          </a>
+          <ScanAction label="GITHUB →" href={active.links.github} newTab className="cabinet-popup__link" />
         )}
         {active.links.itch && (
-          <a className="btn cabinet-popup__link cabinet-popup__link--ghost" href={active.links.itch} target="_blank" rel="noreferrer">
-            PLAY ON ITCH →
-          </a>
+          <ScanAction label="PLAY ON ITCH →" href={active.links.itch} newTab tone="ghost" className="cabinet-popup__link cabinet-popup__link--ghost" />
         )}
       </div>
       <div className="cabinet-popup__stamp" aria-hidden="true">CLEARED // 12P</div>

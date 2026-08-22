@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef } from 'react'
-import { Link } from 'react-router-dom'
 import gsap from 'gsap'
 import Marquee from '../components/Marquee.jsx'
+import ScanAction from '../components/ScanAction.jsx'
 
 const MARQUEE = ['WEB', 'ML', 'CREATIVE CODE', 'GAMES', 'STUDENT', 'HYPERSPACE', '12 PARSECS']
 
@@ -68,12 +68,8 @@ export default function Home() {
         </p>
 
         <div className="hero__cta" data-reveal>
-          <Link to="/work" className="btn">
-            VIEW WORK →
-          </Link>
-          <Link to="/about" className="btn btn--ghost">
-            WHO AM I →
-          </Link>
+          <ScanAction label="VIEW WORK →" to="/work" />
+          <ScanAction label="WHO AM I →" to="/about" tone="ghost" />
         </div>
 
         <div className="hero__meta" data-reveal>

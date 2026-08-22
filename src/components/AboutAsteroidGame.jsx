@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
+import ScanAction from './ScanAction.jsx'
 
 export default function AboutAsteroidGame({ active, onExit }) {
   const canvasRef = useRef(null)
@@ -329,9 +330,7 @@ export default function AboutAsteroidGame({ active, onExit }) {
         <span className="about-game__dash" />
       </div>
       <p className="about-game__orders">AIM // CLICK TO FIRE</p>
-      <button type="button" className="about-game__exit" onClick={onExit} data-cursor>
-        ESC // EJECT
-      </button>
+      <ScanAction label="ESC // EJECT" onClick={onExit} tone="ghost" compact className="about-game__exit" style={{ position: 'absolute' }} />
       {briefing && (
         <div className="about-game__briefing" role="dialog" aria-modal="true" aria-labelledby="order-66-title">
           <p className="eyebrow">// ORDER 66 EXECUTED</p>
@@ -344,14 +343,7 @@ export default function AboutAsteroidGame({ active, onExit }) {
             <span><b>02</b> CLICK OR TAP TO FIRE</span>
             <span><b>03</b> STOP ASTEROIDS BEFORE THEY REACH THE HULL</span>
           </div>
-          <button
-            type="button"
-            className="btn about-game__begin"
-            onClick={beginIntercept}
-            data-cursor
-          >
-            BEGIN INTERCEPT →
-          </button>
+          <ScanAction label="BEGIN INTERCEPT →" onClick={beginIntercept} className="about-game__begin" />
         </div>
       )}
     </section>

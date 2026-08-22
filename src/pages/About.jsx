@@ -1,5 +1,7 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
+import GlitchEffect from '../components/originkit/ui/glitch-text.tsx'
+import ScanAction from '../components/ScanAction.jsx'
 
 const SKILLS = [
   'Python',
@@ -23,36 +25,60 @@ const SPECS = [
   ['CODENAME', 'MILLENNIUM FALCON'],
 ]
 
-function Portrait() {
+function TeapotPortrait() {
   return (
-    <svg viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-      <defs>
-        <pattern id="portrait-grid" width="20" height="20" patternUnits="userSpaceOnUse">
-          <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#2a2a2a" strokeWidth="1" />
-        </pattern>
-      </defs>
-      <rect width="400" height="400" fill="#161616" />
-      <rect width="400" height="400" fill="url(#portrait-grid)" />
+    <div className="teapot-error" role="img" aria-label="HTTP 418: I'm a teapot. Portrait data intentionally unavailable.">
+      <div className="teapot-error__grid" aria-hidden="true" />
+      <div className="teapot-error__noise" aria-hidden="true" />
+      <div className="teapot-error__header">
+        <span>IDENT // REDACTED</span>
+        <span>RFC 2324</span>
+      </div>
 
-      {/* head silhouette */}
-      <circle cx="200" cy="160" r="86" fill="#fff8e7" />
-      <rect x="114" y="160" width="172" height="150" fill="#fff8e7" />
+      <div className="teapot-error__pot" aria-hidden="true">
+        <svg viewBox="0 0 180 130" fill="none">
+          <path d="M47 48h76l-8 55H57L47 48Z" />
+          <path d="M55 48c3-18 12-27 31-27h4c19 0 28 9 31 27" />
+          <path d="M69 21V10h39v11" />
+          <path d="M120 55c30-7 39 1 36 15-3 16-20 24-39 22" />
+          <path d="M49 57 20 71l30 8" />
+          <path d="M65 104v12m41-12v12M55 116h62" />
+          <path className="teapot-error__steam" d="M76 7c-8-9 8-12 0-22M100 7c8-9-8-12 0-22" />
+        </svg>
+      </div>
 
-      {/* visor / helmet slit */}
-      <rect x="128" y="138" width="144" height="40" fill="#00ff66" />
-      <rect x="132" y="142" width="136" height="32" fill="#0d0d0d" opacity="0.5" />
+      <div className="teapot-error__code">
+        <span className="teapot-error__code-base" aria-hidden="true">418</span>
+        <GlitchEffect
+          text="418"
+          color="#fff8e7"
+          font={{
+            fontFamily: "'Archivo Black', sans-serif",
+            fontSize: 104,
+            fontWeight: 900,
+            letterSpacing: -7,
+            lineHeight: 0.82,
+          }}
+          playMode="enter"
+          startAlign="top"
+          infinite
+          shake={{ enabled: true, intensity: 7, x: 5, y: 2 }}
+          slice={{ enabled: true, intensity: 9, minHeight: 8, maxHeight: 46 }}
+        />
+      </div>
 
-      {/* antenna */}
-      <line x1="200" y1="74" x2="200" y2="40" stroke="#00ff66" strokeWidth="3" />
-      <circle cx="200" cy="34" r="8" fill="#00ff66" />
+      <p className="teapot-error__message" data-text="I'M A TEAPOT">I'M A TEAPOT</p>
+      <p className="teapot-error__sub">PORTRAIT REQUEST REFUSED<br />THE SUBJECT IS BREWING.</p>
+      <div className="teapot-error__status">
+        <span>ERR // SHORT_AND_STOUT</span>
+        <i />
+        <span>IDENTITY LEAK: 0.00%</span>
+      </div>
 
-      <text x="24" y="52" fill="#00ff66" fontSize="20" fontFamily="'Space Mono', monospace" letterSpacing="2">
-        SELF-PORTRAIT // PLACEHOLDER
-      </text>
-      <text x="24" y="376" fill="#8a8a8a" fontSize="13" fontFamily="'Space Mono', monospace" letterSpacing="2">
-        DROP A REAL PHOTO HERE
-      </text>
-    </svg>
+      <span className="teapot-error__slice teapot-error__slice--one" aria-hidden="true">418 // TEAPOT</span>
+      <span className="teapot-error__slice teapot-error__slice--two" aria-hidden="true">PORTRAIT NULL</span>
+      <span className="teapot-error__slice teapot-error__slice--three" aria-hidden="true">RFC 2324</span>
+    </div>
   )
 }
 
@@ -95,13 +121,18 @@ export default function About({ orderUnlocked = false, onLaunchGame }) {
         <div className="film" data-reveal>
           <div className="film__sprockets" />
           <div className={`film__frame${negative ? ' is-negative' : ''}`}>
-            <Portrait />
+            <TeapotPortrait />
             <span className="film__label">{negative ? 'POS' : 'NEG'}</span>
           </div>
           <div className="film__sprockets" />
-          <button className="film__toggle" onClick={() => setNegative((v) => !v)}>
-            ▸ DEVELOP AS {negative ? 'POSITIVE' : 'NEGATIVE'}
-          </button>
+          <ScanAction
+            label={`▸ DEVELOP AS ${negative ? 'POSITIVE' : 'NEGATIVE'}`}
+            onClick={() => setNegative((v) => !v)}
+            tone="ghost"
+            compact
+            fullWidth
+            className="film__toggle"
+          />
         </div>
 
         <div className="about__body">
@@ -146,16 +177,19 @@ export default function About({ orderUnlocked = false, onLaunchGame }) {
           </div>
 
           <div className="about__contact" data-reveal>
-            <a className="btn" href="https://github.com/Hacker-lot" target="_blank" rel="noreferrer">
-              GITHUB →
-            </a>
-            <a className="btn btn--ghost" href="https://12-parsec.itch.io/" target="_blank" rel="noreferrer">
-              ITCH.IO →
-            </a>
+            <ScanAction
+              label="GITHUB →"
+              href="https://github.com/Hacker-lot"
+              newTab
+            />
+            <ScanAction
+              label="ITCH.IO →"
+              href="https://12-parsec.itch.io/"
+              newTab
+              tone="ghost"
+            />
             {orderUnlocked && (
-              <button type="button" className="btn about__game-launch" onClick={onLaunchGame} data-cursor>
-                ASTEROID INTERCEPT →
-              </button>
+              <ScanAction label="ASTEROID INTERCEPT →" onClick={onLaunchGame} className="about__game-launch" />
             )}
           </div>
         </div>
