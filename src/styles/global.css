@@ -1218,12 +1218,13 @@ body.asteroid-game-active .order-signal {
   background: #090c09;
   border: 1px solid rgba(0, 255, 102, 0.48);
 }
-.maker-portrait img {
+.maker-portrait__canvas {
+  display: block;
   width: 100%;
   height: 100%;
-  aspect-ratio: 1 / 1;
-  object-fit: cover;
-  filter: saturate(0.82) contrast(1.08);
+  filter:
+    drop-shadow(0 0 5px rgba(0, 255, 102, 0.62))
+    drop-shadow(0 0 9px rgba(255, 45, 214, 0.34));
 }
 .maker-portrait__wash {
   position: absolute;
@@ -1233,6 +1234,35 @@ body.asteroid-game-active .order-signal {
     repeating-linear-gradient(0deg, transparent 0 5px, rgba(0, 0, 0, 0.18) 5px 6px),
     linear-gradient(90deg, rgba(255, 0, 153, 0.09), transparent 12%, transparent 88%, rgba(0, 205, 255, 0.08));
   mix-blend-mode: screen;
+}
+.maker-portrait__reticle {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: 44px;
+  height: 44px;
+  opacity: 0.2;
+  border: 1px solid var(--accent);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.maker-portrait__reticle::before,
+.maker-portrait__reticle::after {
+  content: '';
+  position: absolute;
+  background: var(--accent);
+}
+.maker-portrait__reticle::before {
+  top: 50%;
+  left: -9px;
+  width: calc(100% + 18px);
+  height: 1px;
+}
+.maker-portrait__reticle::after {
+  top: -9px;
+  left: 50%;
+  width: 1px;
+  height: calc(100% + 18px);
 }
 .maker-portrait__meta {
   position: absolute;

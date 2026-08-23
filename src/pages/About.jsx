@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
 import GlitchEffect from '../components/originkit/ui/glitch-text.tsx'
 import ScanAction from '../components/ScanAction.jsx'
+import MakerCyberPortrait from '../components/MakerCyberPortrait.jsx'
 
 const SKILLS = [
   'Python',
@@ -83,20 +84,6 @@ function TeapotPortrait({ visitCount }) {
   )
 }
 
-function MakerPortrait() {
-  return (
-    <div className="maker-portrait" role="img" aria-label="Maker portrait unlocked. Placeholder image currently shown.">
-      <img src="/maker-placeholder.svg" alt="Placeholder portrait for the maker" />
-      <div className="maker-portrait__wash" aria-hidden="true" />
-      <div className="maker-portrait__meta">
-        <span>IDENT // MAKER</span>
-        <span>ACCESS // GRANTED</span>
-      </div>
-      <p>PORTRAIT CHANNEL RESTORED</p>
-    </div>
-  )
-}
-
 export default function About({
   orderUnlocked = false,
   onLaunchGame,
@@ -141,7 +128,7 @@ export default function About({
         <div className="film" data-reveal>
           <div className="film__sprockets" />
           <div className={`film__frame${negative ? ' is-negative' : ''}`}>
-            {makerUnlocked ? <MakerPortrait /> : <TeapotPortrait visitCount={makerVisitCount} />}
+            {makerUnlocked ? <MakerCyberPortrait /> : <TeapotPortrait visitCount={makerVisitCount} />}
             <span className="film__label">{negative ? 'POS' : 'NEG'}</span>
           </div>
           <div className="film__sprockets" />
