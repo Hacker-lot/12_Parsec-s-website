@@ -24,12 +24,11 @@ npm run build      # outputs to dist/
 npm run preview    # serve the production build locally
 ```
 
-## Deploy (Netlify)
+## Deploy (Vercel)
 
-Push to `main` and connect the repo in Netlify. `netlify.toml` sets the build
-command, publish dir, and the SPA redirect. Custom domain (`io12parsec.com`) is
-managed in the Netlify dashboard.
-
+Push to `main`; Vercel builds with `npm run build` and publishes `dist/`.
+`vercel.json` provides the React Router SPA fallback and immutable asset caching.
+The production domains are `io12parsec.com` and `www.io12parsec.com`.
 ## Editing content
 
 - **Photos** — drop images into `src/assets/images/` (`.jpg`); they're swept into
