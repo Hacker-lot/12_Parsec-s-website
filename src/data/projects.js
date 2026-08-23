@@ -22,7 +22,7 @@ export const projects = [
     subtitle: 'Godot rhythm prototype',
     year: '2026',
     tags: ['GAME', 'GODOT', 'RHYTHM'],
-    links: { github: 'https://github.com/Hacker-lot/TrashBeats' },
+    links: { site: 'https://trashbeats.io12parsec.com/' },
     desc: 'A rhythm prototype built in Godot. Trash found a beat. Co-made with 张秋泽 and 汪景程.',
   },
   {
