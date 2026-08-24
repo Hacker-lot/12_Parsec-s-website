@@ -1,6 +1,10 @@
 // Pulls every image out of the local `src/assets/images` folder at build time.
 // Drop more photos in there and they'll be swept into the storm automatically.
-const modules = import.meta.glob('../assets/images/*.jpg', { eager: true, as: 'url' })
+const modules = import.meta.glob('../assets/images/*.jpg', {
+  eager: true,
+  query: '?url',
+  import: 'default',
+})
 
 const byNumber = (s) => {
   const m = s.match(/(\d+)/)
