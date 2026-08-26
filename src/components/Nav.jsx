@@ -20,6 +20,9 @@ export default function Nav() {
         <NavLink to="/about" className={linkClass} data-cursor>
           ABOUT
         </NavLink>
+        <NavLink to="/radio" className={linkClass} data-cursor>
+          RADIO
+        </NavLink>
       </nav>
 
       <div className="nav__status">
