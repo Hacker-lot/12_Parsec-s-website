@@ -9,17 +9,12 @@ import Home from './pages/Home.jsx'
 import Work from './pages/Work.jsx'
 import Projects from './pages/Projects.jsx'
 import About from './pages/About.jsx'
-import Radio from './pages/Radio.jsx'
 import AboutAsteroidGame from './components/AboutAsteroidGame.jsx'
 import MakerReveal from './components/MakerReveal.jsx'
 
 const ORDER_TARGET = 66
 const MAKER_VISIT_TARGET = 5
 let makerVisitSnapshot = null
-
-// radio.io12parsec.com serves the station standalone; the main site keeps
-// it at /radio.
-const isRadioHost = window.location.hostname.startsWith('radio.')
 
 function registerMakerVisit() {
   // React Strict Mode may call state initializers twice in development.
@@ -79,19 +74,6 @@ export default function App() {
     return () => document.removeEventListener('pointerdown', countClick, true)
   }, [gameActive, orderUnlocked])
 
-  if (isRadioHost) {
-    return (
-      <>
-        <Starfield />
-        <Scanlines />
-        <Cursor />
-        <main className="site site--radio">
-          <Radio />
-        </main>
-      </>
-    )
-  }
-
   const exitGame = () => {
     setGameActive(false)
     setOrderCount(0)
@@ -132,7 +114,6 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/work" element={<Work />} />
           <Route path="/projects" element={<Projects />} />
-          <Route path="/radio" element={<Radio />} />
           <Route
             path="/about"
             element={(

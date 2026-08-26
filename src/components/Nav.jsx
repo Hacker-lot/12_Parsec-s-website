@@ -20,9 +20,9 @@ export default function Nav() {
         <NavLink to="/about" className={linkClass} data-cursor>
           ABOUT
         </NavLink>
-        <NavLink to="/radio" className={linkClass} data-cursor>
+        <a href="https://radio.io12parsec.com" className="nav__link" data-cursor>
           RADIO
-        </NavLink>
+        </a>
       </nav>
 
       <div className="nav__status">
