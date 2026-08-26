@@ -9,34 +9,58 @@ const VERT = `
   }
 `
 
-// Bleeding negative: colour in the middle, B&W film-negative at the rim.
+// Gradient negative film: a photo burns to B&W negative from its edges inward,
+// pushed by how far up the funnel wall it rides (uNeg), and fades with depth.
 const FRAG = `
   uniform sampler2D uMap;
   uniform float uNeg;
+  uniform float uAlpha;
   varying vec2 vUv;
   void main() {
     vec4 c = texture2D(uMap, vUv);
     float g = dot(c.rgb, vec3(0.299, 0.587, 0.114));
     vec3 neg = vec3(1.0 - g);
-    vec3 col = mix(c.rgb, neg, uNeg);
-    gl_FragColor = vec4(col, c.a);
+    float edge = smoothstep(0.16, 0.7, distance(vUv, vec2(0.5)));
+    float amt = clamp(uNeg + edge * 0.55, 0.0, 1.0);
+    vec3 col = mix(c.rgb, neg, amt);
+    gl_FragColor = vec4(col, c.a * uAlpha);
   }
 `
 
-const MIN_R = 0.9 // inner reach of the vortex
-const MAX_R = 4.3 // outer rim (full negative)
-const BASE_W = 1.7 // paper width in world units
-const FLY_Z = 7 // z of the enlarged photo
+// Funnel geometry — the viewer stands in the eye, the wall spins around them.
+const Y_MIN = -3.6 // narrow throat of the funnel
+const Y_MAX = 4.8 // wide rim overhead
+const R_MIN = 2.3
+const R_MAX = 7.4
+const BASE_W = 2.3 // media width in world units
+const FOCUS_ANCHOR = new THREE.Vector3(1.45, -0.05, -3.1) // camera-space, right of the detail panel
 
-// A swirling 3D storm of photos spiralling inward around a central axis.
-export default function Storm3D({ images, selectedId, onSelect }) {
+const radiusAt = (y) =>
+  R_MIN + ((y - Y_MIN) / (Y_MAX - Y_MIN)) * (R_MAX - R_MIN)
+
+const isVideo = (url) => /\.(mp4|webm|ogg)(\?|$)/i.test(url)
+
+// A tornado of media. Photos, videos and album sleeves rise along the funnel
+// wall, spinning faster near the throat; the audience stands in the eye.
+export default function Storm3D({ media, selectedSerial, onSelect }) {
   const canvasRef = useRef(null)
-  const selectedRef = useRef(selectedId)
+  const planesRef = useRef([])
+  const selectedRef = useRef(selectedSerial)
   const onSelectRef = useRef(onSelect)
 
   useEffect(() => {
-    selectedRef.current = selectedId
-  }, [selectedId])
+    selectedRef.current = selectedSerial
+    planesRef.current.forEach((mesh) => {
+      const o = mesh.userData
+      const focused = selectedSerial != null && o.serial === selectedSerial
+      o.mode = focused ? 'focus' : 'orbit'
+      if (!focused) {
+        // re-enter the funnel from wherever the mesh currently floats
+        o.y = THREE.MathUtils.clamp(mesh.position.y, Y_MIN, Y_MAX)
+        o.angle = Math.atan2(mesh.position.z, mesh.position.x)
+      }
+    })
+  }, [selectedSerial])
 
   useEffect(() => {
     onSelectRef.current = onSelect
@@ -53,46 +77,66 @@ export default function Storm3D({ images, selectedId, onSelect }) {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 
     const scene = new THREE.Scene()
-    const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 100)
-    camera.position.set(0, 0, 10)
-
-    const group = new THREE.Group()
-    scene.add(group)
+    const camera = new THREE.PerspectiveCamera(72, 1, 0.1, 60)
+    camera.position.set(0, 0.3, 0)
+    scene.add(camera)
 
     const raycaster = new THREE.Raycaster()
-    const pointer = new THREE.Vector2()
-    const mouse = new THREE.Vector2()
-    const zPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0)
-    const mouseWorld = new THREE.Vector3()
-    const magnet = new THREE.Vector3()
+    const pointer = new THREE.Vector2(-2, -2)
+    const anchorWorld = new THREE.Vector3()
     const target = new THREE.Vector3()
     const scaleV = new THREE.Vector3(1, 1, 1)
 
-    const planes = []
     let disposed = false
+    let timeScale = 1
+    let yaw = 0
+    let pitch = 0
+    let yawTarget = 0
+    let pitchTarget = 0
 
-    // swirling debris (the storm's dust)
-    const debrisN = 220
+    // wind-blown dust inside the funnel
+    const debrisN = 260
     const dpos = new Float32Array(debrisN * 3)
     for (let i = 0; i < debrisN; i++) {
+      const y = Y_MIN + Math.random() * (Y_MAX - Y_MIN)
       const a = Math.random() * Math.PI * 2
-      const r = 0.6 + Math.random() * 4.6
+      const r = radiusAt(y) * (0.75 + Math.random() * 0.3)
       dpos[i * 3] = Math.cos(a) * r
-      dpos[i * 3 + 1] = (Math.random() - 0.5) * 3
+      dpos[i * 3 + 1] = y
       dpos[i * 3 + 2] = Math.sin(a) * r
     }
     const debrisGeo = new THREE.BufferGeometry()
     debrisGeo.setAttribute('position', new THREE.BufferAttribute(dpos, 3))
     const debrisMat = new THREE.PointsMaterial({
-      size: 0.04,
+      size: 0.03,
       color: 0x00ff66,
       transparent: true,
-      opacity: 0.5,
+      opacity: 0.35,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
     })
     const debris = new THREE.Points(debrisGeo, debrisMat)
-    group.add(debris)
+    scene.add(debris)
+
+    // faint structural rings tracing the funnel
+    const ringGroup = new THREE.Group()
+    for (let i = 0; i <= 5; i += 1) {
+      const y = Y_MIN + (i / 5) * (Y_MAX - Y_MIN)
+      const r = radiusAt(y)
+      const pts = new THREE.EllipseCurve(0, 0, r, r).getPoints(72)
+      const geo = new THREE.BufferGeometry().setFromPoints(pts)
+      const mat = new THREE.LineBasicMaterial({
+        color: 0x00ff66,
+        transparent: true,
+        opacity: 0.08,
+        depthWrite: false,
+      })
+      const ring = new THREE.LineLoop(geo, mat)
+      ring.rotation.x = -Math.PI / 2
+      ring.position.y = y
+      ringGroup.add(ring)
+    }
+    scene.add(ringGroup)
 
     const resize = () => {
       const parent = canvas.parentElement
@@ -109,40 +153,60 @@ export default function Storm3D({ images, selectedId, onSelect }) {
     const onMove = (e) => {
       pointer.x = (e.clientX / window.innerWidth) * 2 - 1
       pointer.y = -(e.clientY / window.innerHeight) * 2 + 1
-      mouse.copy(pointer)
+      if (selectedRef.current == null && !reduced) {
+        yawTarget = -pointer.x * 0.38
+        pitchTarget = pointer.y * 0.2
+      }
     }
     const onClick = () => {
       raycaster.setFromCamera(pointer, camera)
-      const hits = raycaster.intersectObjects(planes, false)
-      if (hits.length) {
-        const id = hits[0].object.userData.id
-        if (id) onSelectRef.current(id === selectedRef.current ? null : id)
-      }
+      const hits = raycaster.intersectObjects(planesRef.current, false)
+      if (!hits.length) return
+      const serial = hits[0].object.userData.serial
+      if (!serial) return
+      // while one item is focused, only it answers (click it to release)
+      if (selectedRef.current != null && serial !== selectedRef.current) return
+      onSelectRef.current(serial === selectedRef.current ? null : serial)
     }
     window.addEventListener('mousemove', onMove)
     canvas.addEventListener('click', onClick)
 
-    const loader = new THREE.TextureLoader()
+    const textureLoader = new THREE.TextureLoader()
+    const videos = []
 
-    // Build photo planes.
+    const loadTexture = (url) => {
+      if (isVideo(url)) {
+        const video = document.createElement('video')
+        video.src = url
+        video.muted = true
+        video.loop = true
+        video.playsInline = true
+        video.play().catch(() => {})
+        videos.push(video)
+        const tex = new THREE.VideoTexture(video)
+        tex.colorSpace = THREE.SRGBColorSpace
+        return Promise.resolve(tex)
+      }
+      return new Promise((res, rej) => textureLoader.load(url, res, undefined, rej)).catch(
+        () => null,
+      )
+    }
+
+    // Build media planes along the funnel wall.
     ;(async () => {
-      for (let i = 0; i < images.length; i++) {
-        const url = images[i].url
-        const tex = await new Promise((res, rej) => loader.load(url, res, undefined, rej)).catch(
-          () => null,
-        )
+      for (let i = 0; i < media.length; i++) {
+        const tex = await loadTexture(media[i].url)
         if (disposed) {
           if (tex) tex.dispose()
           return
         }
         if (!tex) continue
-        tex.colorSpace = THREE.SRGBColorSpace
 
         const img = tex.image
         const aspect = img && img.width ? img.width / img.height : 4 / 3
         const geo = new THREE.PlaneGeometry(BASE_W, BASE_W / aspect)
         const mat = new THREE.ShaderMaterial({
-          uniforms: { uMap: { value: tex }, uNeg: { value: 0 } },
+          uniforms: { uMap: { value: tex }, uNeg: { value: 0.5 }, uAlpha: { value: 1 } },
           vertexShader: VERT,
           fragmentShader: FRAG,
           transparent: true,
@@ -150,31 +214,27 @@ export default function Storm3D({ images, selectedId, onSelect }) {
         })
         const mesh = new THREE.Mesh(geo, mat)
 
-        // spread evenly across the radial range (clear bleeding-edge gradient)
-        const frac = images.length > 1 ? i / (images.length - 1) : 0
-        const radius = MIN_R + frac * (MAX_R - MIN_R)
-        const angle = i * 2.39996
-
+        const y = Y_MIN + ((i + 0.5) / media.length) * (Y_MAX - Y_MIN)
+        const angle = i * 2.39996 // golden angle spread
         mesh.userData = {
-          id: images[i].id,
+          serial: media[i].serial,
           aspect,
-          radius,
+          y,
           angle,
-          y: ((i % 4) - 1.5) * 1.15,
-          inward: reduced ? 0 : 0.16 + (i % 3) * 0.02,
-          phase: i * 1.37,
-          targetScale: 1,
+          rise: reduced ? 0.06 : 0.5 + Math.random() * 0.4,
+          rJit: (Math.random() - 0.5) * 0.7,
+          bobPhase: i * 1.37,
+          mode: selectedRef.current === media[i].serial ? 'focus' : 'orbit',
         }
-        mesh.position.set(radius * Math.cos(angle), mesh.userData.y, radius * Math.sin(angle))
-        mat.uniforms.uNeg.value = THREE.MathUtils.clamp(
-          (radius - MIN_R) / (MAX_R - MIN_R),
-          0,
-          1,
+        mesh.position.set(
+          radiusAt(y) * Math.cos(angle),
+          y,
+          radiusAt(y) * Math.sin(angle),
         )
         mesh.lookAt(camera.position)
 
-        group.add(mesh)
-        planes.push(mesh)
+        scene.add(mesh)
+        planesRef.current.push(mesh)
       }
     })()
 
@@ -186,64 +246,75 @@ export default function Storm3D({ images, selectedId, onSelect }) {
       const t = clock.elapsedTime
       const sel = selectedRef.current
 
-      if (!reduced) {
-        debris.rotation.y += dt * 0.22
+      // the storm holds its breath while an item is extracted
+      timeScale += ((sel ? 0.16 : 1) - timeScale) * Math.min(1, dt * 3)
+      if (reduced) timeScale = Math.min(timeScale, 0.15)
 
-        raycaster.setFromCamera(mouse, camera)
-        if (raycaster.ray.intersectPlane(zPlane, mouseWorld)) {
-          mouseWorld.x = THREE.MathUtils.clamp(mouseWorld.x, -4.5, 4.5)
-          mouseWorld.y = THREE.MathUtils.clamp(mouseWorld.y, -4.5, 4.5)
-        }
+      // look around the eye — locked while an item is extracted
+      if (sel != null) {
+        yawTarget = 0
+        pitchTarget = 0
+      }
+      yaw += (yawTarget - yaw) * Math.min(1, dt * 4)
+      pitch += (pitchTarget - pitch) * Math.min(1, dt * 4)
+      camera.rotation.set(pitch, yaw, 0, 'YXZ')
+      camera.position.y = 0.3 + (reduced ? 0 : Math.sin(t * 0.4) * 0.12)
 
-        const hovered = new Set(
-          raycaster.intersectObjects(planes, false).map((h) => h.object),
-        )
+      debris.rotation.y += dt * 0.9 * timeScale
+      ringGroup.rotation.y -= dt * 0.05 * timeScale
 
-        for (const mesh of planes) {
-          const o = mesh.userData
-          const isSel = sel && o.id === sel
+      for (const mesh of planesRef.current) {
+        const o = mesh.userData
+        const focused = sel != null && o.serial === sel
 
-          if (isSel) {
-            // full colour + fit the whole image within the viewport
-            mesh.material.uniforms.uNeg.value = 0
-            const dist = camera.position.z - FLY_Z
-            const vh = 2 * dist * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))
-            const vw = vh * camera.aspect
-            o.targetScale = Math.min((0.82 * vw) / BASE_W, (0.82 * vh * o.aspect) / BASE_W)
+        if (o.mode === 'focus') {
+          // tear out of the wall, fill most of the screen, regain colour
+          anchorWorld.copy(FOCUS_ANCHOR)
+          camera.localToWorld(anchorWorld)
+          const dist = camera.position.distanceTo(anchorWorld)
+          const vh = 2 * dist * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))
+          const vw = vh * camera.aspect
+          const fit = Math.min((0.5 * vw) / BASE_W, (0.8 * vh * o.aspect) / BASE_W)
 
-            target.set(0, 0, FLY_Z)
-            mesh.position.lerp(target, 0.04)
-            scaleV.setScalar(o.targetScale)
-            mesh.scale.lerp(scaleV, 0.06)
-          } else {
-            // rotate + spiral inward (recursive vortex)
-            o.angle += (1.7 / Math.sqrt(o.radius + 0.3)) * dt
-            o.radius -= o.inward * dt
-            if (o.radius < MIN_R) o.radius = MAX_R // recurse back to the outer rim
-
-            const orbitPos = new THREE.Vector3(
-              o.radius * Math.cos(o.angle),
-              o.y + Math.sin(t * 0.8 + o.phase) * 0.12,
-              o.radius * Math.sin(o.angle),
-            )
-            magnet.subVectors(mouseWorld, orbitPos).multiplyScalar(0.22)
-            target.copy(orbitPos).add(magnet)
-            o.targetScale = sel ? 0.5 : hovered.has(mesh) ? 1.16 : 1
-            mesh.position.lerp(target, 0.14)
-            scaleV.setScalar(o.targetScale)
-            mesh.scale.lerp(scaleV, 0.12)
-
-            // radial "bleeding" negative — colour at centre, negative at the rim
-            const r = Math.hypot(mesh.position.x, mesh.position.z)
-            mesh.material.uniforms.uNeg.value = THREE.MathUtils.clamp(
-              (r - MIN_R) / (MAX_R - MIN_R),
-              0,
-              1,
-            )
+          mesh.position.lerp(anchorWorld, 0.075)
+          scaleV.setScalar(fit)
+          mesh.scale.lerp(scaleV, 0.085)
+          mesh.material.uniforms.uNeg.value +=
+            (0 - mesh.material.uniforms.uNeg.value) * 0.1
+          mesh.material.uniforms.uAlpha.value +=
+            (1 - mesh.material.uniforms.uAlpha.value) * 0.12
+        } else {
+          // rise along the funnel wall; the throat spins fastest
+          o.y += o.rise * dt * timeScale
+          if (o.y > Y_MAX) {
+            o.y = Y_MIN
+            o.angle = Math.random() * Math.PI * 2
           }
+          const r = radiusAt(o.y) + o.rJit
+          o.angle += (2.8 / Math.sqrt(Math.max(r, 0.8))) * dt * timeScale
 
-          mesh.lookAt(camera.position)
+          target.set(
+            r * Math.cos(o.angle),
+            o.y + Math.sin(t * 0.8 + o.bobPhase) * 0.14,
+            r * Math.sin(o.angle),
+          )
+          mesh.position.lerp(target, Math.min(1, dt * 9))
+          scaleV.setScalar(1)
+          mesh.scale.lerp(scaleV, 0.1)
+
+          // gradient negative: colour near the eye, burnt negative at the rim
+          const neg = THREE.MathUtils.clamp((r - R_MIN) / (R_MAX - R_MIN), 0, 1) * 0.9
+          mesh.material.uniforms.uNeg.value += (neg - mesh.material.uniforms.uNeg.value) * 0.1
+
+          // depth fade across the funnel + dim the wall while one is out
+          const dist = mesh.position.distanceTo(camera.position)
+          const depthFade = THREE.MathUtils.clamp(1.25 - dist / 12, 0, 1)
+          const alpha = depthFade * (sel ? 0.22 : 1)
+          mesh.material.uniforms.uAlpha.value +=
+            (alpha - mesh.material.uniforms.uAlpha.value) * 0.12
         }
+
+        mesh.lookAt(camera.position)
       }
 
       renderer.render(scene, camera)
@@ -255,13 +326,23 @@ export default function Storm3D({ images, selectedId, onSelect }) {
       window.removeEventListener('resize', resize)
       window.removeEventListener('mousemove', onMove)
       canvas.removeEventListener('click', onClick)
-      planes.forEach((m) => {
+      planesRef.current.forEach((m) => {
         m.geometry.dispose()
         m.material.uniforms.uMap.value.dispose()
         m.material.dispose()
+        scene.remove(m)
+      })
+      planesRef.current = []
+      videos.forEach((v) => {
+        v.pause()
+        v.removeAttribute('src')
       })
       debrisGeo.dispose()
       debrisMat.dispose()
+      ringGroup.children.forEach((ring) => {
+        ring.geometry.dispose()
+        ring.material.dispose()
+      })
       renderer.dispose()
     }
   }, [])
