@@ -630,7 +630,7 @@ body.asteroid-game-active .order-signal {
   white-space: nowrap;
 }
 .storm-search input {
-  width: 9ch;
+  width: calc(6ch + 72px); /* 6 digits + letter-spacing slack (border-box) */
   padding: 14px 8px;
   border: 0;
   outline: none;
@@ -681,6 +681,23 @@ body.asteroid-game-active .order-signal {
   40% { transform: translate(calc(-50% + 9px), -50%); }
   60% { transform: translate(calc(-50% - 6px), -50%); }
   80% { transform: translate(calc(-50% + 6px), -50%); }
+}
+
+/* docked to the bottom while an item is extracted — chain serials freely */
+.storm-search.is-docked {
+  top: auto;
+  bottom: 26px;
+  transform: translateX(-50%);
+}
+.storm-search.is-docked.is-error {
+  animation: stormShakeDocked 0.4s steps(2, end);
+}
+@keyframes stormShakeDocked {
+  0%, 100% { transform: translateX(-50%); }
+  20% { transform: translateX(calc(-50% - 9px)); }
+  40% { transform: translateX(calc(-50% + 9px)); }
+  60% { transform: translateX(calc(-50% - 6px)); }
+  80% { transform: translateX(calc(-50% + 6px)); }
 }
 
 /* extracted item dossier — text left, the media fills the screen right */
@@ -2212,6 +2229,16 @@ body.asteroid-impact .about-game__wash {
   }
   .storm-search.is-error {
     animation: none;
+  }
+  .storm-search.is-docked {
+    position: fixed;
+    top: calc(var(--nav-h) + 10px);
+    bottom: auto;
+    left: 50%;
+    z-index: 7;
+    margin: 0;
+    transform: translateX(-50%);
+    width: min(92vw, 420px);
   }
   .storm-detail {
     position: fixed;

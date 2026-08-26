@@ -92,12 +92,11 @@ export default function Work() {
         <Storm3D media={stormMedia} selectedSerial={selectedSerial} onSelect={setSelectedSerial} />
       </div>
 
-      {!selected && (
-        <form
-          className={`storm-search${error ? ' is-error' : ''}`}
-          onSubmit={submitSerial}
-          data-reveal
-        >
+      <form
+        className={`storm-search${error ? ' is-error' : ''}${selected ? ' is-docked' : ''}`}
+        onSubmit={submitSerial}
+        data-reveal
+      >
           <div className="storm-search__row">
             <label htmlFor="storm-serial">SERIAL //</label>
             <input
@@ -120,7 +119,6 @@ export default function Work() {
               : `ENTER 6-DIGIT SERIAL // TRY ${stormMedia[0]?.serial}`}
           </small>
         </form>
-      )}
 
       {selected && (
         <aside className="storm-detail" aria-live="polite">
